@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Umbrella Engine/Umbrella Engine.vcxproj" Id="192e99e8-0155-49b4-ab9b-017532728b81" />
+</Solution>

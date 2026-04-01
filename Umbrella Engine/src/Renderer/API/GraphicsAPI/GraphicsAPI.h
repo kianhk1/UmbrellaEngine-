@@ -11,14 +11,29 @@
 using namespace std;
 
 struct ShaderData {
-	unsigned int programID;
+    unsigned int programID;
 };
-struct Size { int width; int height; };
-struct Point { int x; int y; };
 
-class Mesh;
-using FuncPtr = void(*)();
+struct MeshData {
+    unsigned int vaoID = 0;
+    unsigned int vboID = 0;
+    unsigned int iboID = 0;
+    int indexCount = 0;
+};
+
+struct TextureData
+{
+    string t_path;
+    unsigned int t_id;
+private:
+    GLFWimage images;
+    int nrChannels;
+    static std::map<string, unsigned int> Texturesid;
+};
+
 namespace API {
+    struct Size { int width; int height; };
+    struct Point { int x; int y; };
     class GraphicsAPI {
     public:
         virtual ~GraphicsAPI() = default;
@@ -31,21 +46,20 @@ namespace API {
         virtual bool IsWindowFullscreen(void) = 0;
         virtual bool IsWindowMinimized(void) = 0;
         virtual bool IsWindowMaximized(void) = 0;
-        virtual bool IsDebugOn() = 0;
 
         virtual void SetFullscreen(bool fullscreen) = 0;
         virtual void ToggleFullscreen() = 0;
-        virtual void ToggleBorderlessWindowed(void) = 0;                       // Toggle window state: borderless windowed, resizes window to match monitor resolution
-        virtual void MaximizeWindow(void) = 0;                                  // Set window state: maximized, if resizable
-        virtual void MinimizeWindow(void) = 0;                                  // Set window state: minimized, if resizable
-        virtual void RestoreWindow(void) = 0;                                  // Set window state: not minimized/maximized
+        //virtual void ToggleBorderlessWindowed(void) = 0;                       // Toggle window state: borderless windowed, resizes window to match monitor resolution
+        //virtual void MaximizeWindow(void) = 0;                                  // Set window state: maximized, if resizable
+        //virtual void MinimizeWindow(void) = 0;                                  // Set window state: minimized, if resizable
+        //virtual void RestoreWindow(void) = 0;                                  // Set window state: not minimized/maximized
         virtual void SetWindowIcon(string imagePath) = 0;
 
         virtual void ShowCursor(void) = 0;                                     /// Shows cursor
         virtual void HideCursor(void) = 0;                                    /// Hides cursor
         virtual bool IsCursorHidden(void) = 0;                                 /// Check if cursor is not visible
-        virtual void EnableCursor(void) = 0;                                    /// Enables cursor (unlock cursor)
-        virtual void DisableCursor(void) = 0;                                   /// Disables cursor (lock cursor)
+        //virtual void EnableCursor(void) = 0;                                    /// Enables cursor (unlock cursor)
+        //virtual void DisableCursor(void) = 0;                                   /// Disables cursor (lock cursor)
         virtual bool IsCursorOnScreen(void) = 0;
         virtual Size GetSize() = 0;
 
@@ -62,20 +76,21 @@ namespace API {
         virtual void useShader(const ShaderData& shader) = 0;
 
         // مدیریت مش‌ها (Vertex/Index data)
-        virtual Mesh* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices, FuncPtr Attrib) = 0;
-        virtual void deleteMesh(Mesh* buffers) = 0;
-        virtual void drawMesh(Mesh* buffers) = 0;
+        virtual void setAttrib(MeshData* data, int a, int b, int c, int d) = 0;
+        virtual MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) = 0;
+        virtual void deleteMesh(MeshData* buffers) = 0;
+        virtual void drawMesh(MeshData* buffers) = 0;
 
         //
-        virtual void set_mat4(glm::mat4 setmat4, const GLchar* name) = 0;
-        virtual void set_vec3(glm::vec3 setvec3, const GLchar* name) = 0;
-        virtual void set_vec3(int x, int y, int z, const GLchar* name) = 0;
-        virtual void set_float(float setfloat, const GLchar* name) = 0;
-        virtual void set_int(int setint, const GLchar* name) = 0;
-        virtual void set_bool(bool setbool, const GLchar* name) = 0;
+        virtual void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name) = 0;
+        virtual void set_vec3(unsigned int shaderID, glm::vec3 setvec3, const GLchar* name) = 0;
+        virtual void set_float(unsigned int shaderID, float setfloat, const GLchar* name) = 0;
+        virtual void set_int(unsigned int shaderID, int setint, const GLchar* name) = 0;
+        virtual void set_bool(unsigned int shaderID, bool setbool, const GLchar* name) = 0;
 
         // دریافت وضعیت API (مثلاً آیا اولیه شده است)
-        virtual bool isInitialized() const = 0;
+        virtual void update() = 0;
+        //virtual bool isInitialized() const = 0;
     protected:
         string Read_File(const char* path) {
             ifstream file(path);
@@ -92,4 +107,3 @@ namespace API {
         }
     };
 }
-

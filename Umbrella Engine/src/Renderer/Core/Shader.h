@@ -2,7 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include "../../Core/Log Managment/Logger.h"
-
+struct Size { int width; int height; };
+struct Point { int x; int y; };
 using namespace std;
 class ShaderData {
 public:

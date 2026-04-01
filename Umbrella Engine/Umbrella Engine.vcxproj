@@ -134,14 +134,22 @@
     <ClCompile Include="vendor\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
+    <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
     <ClInclude Include="src\Renderer\Core\loadTextures.h" />
     <ClInclude Include="src\Renderer\Core\MaterialData.h" />
     <ClInclude Include="src\Renderer\Core\mesh.h" />
     <ClInclude Include="src\Renderer\Core\Shader.h" />
+    <ClInclude Include="src\Renderer\ECS\Component.h" />
+    <ClInclude Include="src\Renderer\ECS\Entity.h" />
+    <ClInclude Include="src\Renderer\ECS\Object.h" />
+    <ClInclude Include="src\Renderer\ECS\RenderQueue.h" />
+    <ClInclude Include="src\Renderer\ECS\System.h" />
     <ClInclude Include="Umbrella Engine.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FileName.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

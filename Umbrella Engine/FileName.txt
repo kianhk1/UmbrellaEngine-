@@ -1,23 +1,4 @@
-#pragma once
-#pragma once
-#include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <map>
-#include <vector>
-#include "stb_image.h"
-#include "GraphicsAPI.h"
-#include "../../../Core/Log Managment/Logger.h"
-#include "../../Core/mesh.h"
-#include "../../Core/MaterialData.h"
-
-namespace API {
-    class openglAPI : public GraphicsAPI {
-    public:
-        void InitGlfw() {
+void InitGlfw() {
             if (!glfwInit())
                 return;
             int major, minor, rev;
@@ -111,10 +92,10 @@ namespace API {
             }
             wasPressed = isPressed;
         }
-        //void ToggleBorderlessWindowed(void)override;                        // Toggle window state: borderless windowed, resizes window to match monitor resolution
-        //void MaximizeWindow(void)override;                                  // Set window state: maximized, if resizable
-        //void MinimizeWindow(void)override;                                  // Set window state: minimized, if resizable
-        //void RestoreWindow(void)override;                                   // Set window state: not minimized/maximized
+        void ToggleBorderlessWindowed(void)override;                        // Toggle window state: borderless windowed, resizes window to match monitor resolution
+        void MaximizeWindow(void)override;                                  // Set window state: maximized, if resizable
+        void MinimizeWindow(void)override;                                  // Set window state: minimized, if resizable
+        void RestoreWindow(void)override;                                   // Set window state: not minimized/maximized
         void SetWindowIcon(string imagePath)override {
             GLFWimage images;
             images.pixels = stbi_load(imagePath.c_str(), &images.width, &images.height, 0, 4);
@@ -129,8 +110,8 @@ namespace API {
         void ShowCursor(void) override { glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); hidecursor = false; }                                      /// Shows cursor
         void HideCursor(void) override { glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); hidecursor = true; }                                      /// Hides cursor
         bool IsCursorHidden(void) override { return hidecursor; }                                  /// Check if cursor is not visible
-       //void EnableCursor(void)override;                                    /// Enables cursor (unlock cursor)
-       // void DisableCursor(void)override;                                   /// Disables cursor (lock cursor)
+        void EnableCursor(void)override;                                    /// Enables cursor (unlock cursor)
+        void DisableCursor(void)override;                                   /// Disables cursor (lock cursor)
         bool IsCursorOnScreen(void)override {
             if (!Window) return false;
             double xpos, ypos;
@@ -142,7 +123,7 @@ namespace API {
             // اطمینان از اینکه موس در محدوده پنجره است
             return (xpos >= 0 && xpos < width && ypos >= 0 && ypos < height);
         }
-        Size GetSize() override {
+        Size GetSize()override {
             return display;
         }
 
@@ -197,141 +178,42 @@ namespace API {
         }
 
         // مدیریت مش‌ها (Vertex/Index data)
-        void createVAO(MeshData* data) {
-            glGenVertexArrays(1, &data->vaoID);
-            glBindVertexArray(data->vaoID);
-        }
-        void BindVao(MeshData* data) {
-            glBindVertexArray(data->vaoID);
-            glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
-            glEnableVertexAttribArray(data->iboID);
-        }
-        void createVBO(MeshData* data, float* vertex, int a) {
-            glBindVertexArray(data->vaoID);
-            glGenBuffers(1, &data->vboID);
-            glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a, vertex, GL_STATIC_DRAW);
-        }
-        void createIBO(MeshData* data, unsigned int* indexes, int a) {
-            glBindVertexArray(data->vaoID);
-            glGenBuffers(1, &data->iboID);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->iboID);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * a, indexes, GL_STATIC_DRAW);
-        }
-        void setAttrib(MeshData* data, int a, int b, int c, int d) override {
-            glBindVertexArray(data->vaoID);
-            glEnableVertexAttribArray(a);
-            glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
-            glVertexAttribPointer(a, b, GL_FLOAT, GL_FALSE, c * sizeof(float), (void*)(d * sizeof(float)));
-        }
-        MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) override {
-            MeshData* buffers = new MeshData();
-            createVAO(buffers);
-            createVBO(buffers, vertices.data(), vertices.size());
-            createIBO(buffers,indices.data(), vertices.size());
-            buffers->indexCount = indices.size();
+        Mesh* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices, FuncPtr Attrib) override {
+            Mesh* buffers = new Mesh;
+            buffers->createVAO();
+            buffers->createVBO(vertices.data(), vertices.size());
+            Attrib();
             return buffers;
         }
-        void deleteMesh(MeshData* buffers) override {
-            if (buffers->vaoID != 0) glDeleteVertexArrays(1, &buffers->vaoID);
-            if (buffers->vboID != 0) glDeleteBuffers(1, &buffers->vboID);
-            if (buffers->iboID != 0) glDeleteBuffers(1, &buffers->iboID);
-            buffers->vaoID = buffers->vboID = buffers->iboID = 0;
-            buffers->indexCount = 0;
+        void deleteMesh(Mesh* buffers) override {
+            buffers->~Mesh();
         }
-        void drawMesh(MeshData* buffers) override {
-            glBindVertexArray(buffers->vaoID);
-            glDrawElements(GL_TRIANGLES, buffers->indexCount, GL_UNSIGNED_INT, 0);
+        void drawMesh(Mesh* buffers) override {
+            buffers->draw(buffers->GetindexCount());
         }
 
         //
-        void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name)override {
+        void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
             glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(setmat4));
         }
 
-        void set_vec3(unsigned int shaderID, glm::vec3 setvec3, const GLchar* name)override {
+        void set_vec3(unsigned int shaderID, glm::vec3 setvec3, const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
             glUniform3fv(loc, 1, glm::value_ptr(setvec3));
         }
 
-        void set_float(unsigned int shaderID, float setfloat, const GLchar* name)override {
+        void set_float(unsigned int shaderID, float setfloat, const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
             glUniform1f(loc, setfloat);
         }
 
-        void set_int(unsigned int shaderID, int setint, const GLchar* name)override {
+        void set_int(unsigned int shaderID, int setint, const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
             glUniform1i(loc, setint);
         }
 
-        virtual void set_bool(unsigned int shaderID, bool setbool, const GLchar* name)override {
-            int loc = glGetUniformLocation(shaderID, name);
-            glUniform1i(loc, setbool);
-        }
 
         // دریافت وضعیت API (مثلاً آیا اولیه شده است)
-        void update() {
-            glfwSwapInterval(1);
-            glfwSwapBuffers(Window);
-            glfwPollEvents();
-        }
-        //bool isInitialized() const override;
+        bool isInitialized() const override;
         GLFWwindow* Window;
-    private:
-        unsigned int compileShader(unsigned int type, const char* path) {
-
-            unsigned int shaderID = glCreateShader(type);
-            std::string source = Read_File(path);
-            const char* src = source.c_str();
-            glShaderSource(shaderID, 1, &src, nullptr);
-            glCompileShader(shaderID);
-            int success;
-            char infoLog[512];
-            glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-            if (!success) {
-                glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
-                std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-                return -1;
-            }
-            return shaderID;
-        }
-        bool m_initialized = false;
-        // تابع کمکی برای لینک کردن شیدرها
-        bool linkShaderProgram(GLuint programID, GLuint vertexShaderID, GLuint fragmentShaderID) {
-            glAttachShader(programID, vertexShaderID);
-            glAttachShader(programID, fragmentShaderID);
-            glLinkProgram(programID);
-
-            int success;
-            char infoLog[512];
-            glGetProgramiv(programID, GL_LINK_STATUS, &success);
-            if (!success) {
-                glGetProgramInfoLog(programID, 512, nullptr, infoLog);
-                std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-                return false;
-            }
-            glDeleteShader(vertexShaderID);
-            glDeleteShader(fragmentShaderID);
-            return true;
-        }
-
-        const char* title;                  // Window text title const pointer
-        unsigned int flags;                 // Configuration flags (bit based), keeps window state
-        bool ready;                         // Check if window has been initialized successfully
-        bool shouldClose;                   // Check if window set for closing
-        bool hidecursor;
-        bool usingdebugoutput = true;
-
-        bool m_isMinimized;
-        bool m_isMaximized;
-        bool m_isFullscreen;
-
-        Point position;                     // Window position (required on fullscreen toggle)
-        Size display;                       // Display width and height (monitor, device-screen, LCD, ...)
-        Size screen;                        // Screen width and height (used render area)
-        Size screenMin;                     // Screen minimum width and height (for resizable window)
-        Size screenMax;                     // Screen maximum width and height (for resizable window)
-
-    };
-}

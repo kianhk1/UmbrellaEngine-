@@ -21,16 +21,16 @@ struct MeshData {
     int indexCount = 0;
 };
 
-struct TextureData
+struct Texture2DData
 {
     string t_path;
     unsigned int t_id;
-private:
+    int t_unit = GL_TEXTURE0;
     GLFWimage images;
     int nrChannels;
     static std::map<string, unsigned int> Texturesid;
 };
-
+std::map<string, unsigned int> Texture2DData::Texturesid;
 namespace API {
     struct Size { int width; int height; };
     struct Point { int x; int y; };
@@ -80,6 +80,10 @@ namespace API {
         virtual MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) = 0;
         virtual void deleteMesh(MeshData* buffers) = 0;
         virtual void drawMesh(MeshData* buffers) = 0;
+
+        // texture
+        virtual void Load2DTexture(Texture2DData* texturedata) = 0;
+        virtual void Bind(Texture2DData* texturedata) = 0;
 
         //
         virtual void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name) = 0;

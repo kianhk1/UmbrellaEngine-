@@ -3,7 +3,7 @@
 class Component {
 public:
 	Component(std::shared_ptr<API::GraphicsAPI> Graphic) {
-		graphic = std::move(Graphic);
+		graphic = Graphic;
 	}
 	bool isActive = true;
 	virtual ~Component() = default;
@@ -11,13 +11,14 @@ public:
 	virtual void Update(float dt) {}
 	std::shared_ptr<API::GraphicsAPI> graphic;
 };
+
 class ShaderComponent : public Component {
 public:
 	ShaderComponent(
 		std::shared_ptr<API::GraphicsAPI> Graphic,
 		const std::string& path_Vertex_Shader, 
 		const std::string& path_Fragment_Shader) 
-		: Component(std::move(Graphic)){
+		: Component(Graphic){
 		shaderdata = graphic->createShader(path_Vertex_Shader, path_Fragment_Shader);
 	}
 	void use() {
@@ -27,7 +28,7 @@ public:
 };
 class TransformComponent : public Component {
 public:
-	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic, ShaderData Shader) : Component(std::move(Graphic)), shader(Shader) {}
+	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic, ShaderData Shader) : Component(Graphic), shader(Shader) {}
 	// Transform
 	ShaderData shader;
 	glm::vec3 position = glm::vec3(0.0f);
@@ -58,7 +59,7 @@ public:
 		std::vector<float>& vertices,
 		std::vector<unsigned int>& indices,
 		ShaderData Shader)
-		: Component(std::move(Graphic)), shader(Shader) {
+		: Component(Graphic), shader(Shader) {
 		meshdata = graphic->createMesh(vertices, indices);
 	}
 	void setAttrib(int a, int b, int c, int d) {
@@ -77,4 +78,27 @@ public:
 	ShaderData shader;
 	MeshData* meshdata;
 };
+class Texture2DComponent : public Component {
+public:
+	Texture2DComponent(std::shared_ptr<API::GraphicsAPI> Graphic,
+		Texture2DData* T_data,
+		ShaderData Shader)
+		: Component(Graphic), t_data(T_data), shader(Shader) {
+		graphic->Load2DTexture(t_data);
+	}
+	void set_texture(const char* name) {
+		graphic->useShader(shader);
+		graphic->set_int(shader.programID, t_data->t_unit - GL_TEXTURE0, name);
+	}
+	void Bind() {
+		graphic->Bind(t_data);
+	}
+	void Start() override {
 
+	}
+	void Update(float dt) override {
+
+	}
+	Texture2DData* t_data;
+	ShaderData shader;
+};

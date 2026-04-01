@@ -244,6 +244,45 @@ namespace API {
             glDrawElements(GL_TRIANGLES, buffers->indexCount, GL_UNSIGNED_INT, 0);
         }
 
+
+        // texture
+        void Load2DTexture(Texture2DData* texturedata) override {
+            auto it = texturedata->Texturesid.find(texturedata->t_path);
+
+            if (it != texturedata->Texturesid.end()) {
+                texturedata->t_id = it->second;
+                return;
+            }
+            texturedata->Texturesid.emplace(texturedata->t_path, loadimage(texturedata));
+        }
+        unsigned int loadimage(Texture2DData* texturedata) {
+            glGenTextures(1, &texturedata->t_id);
+            glBindTexture(GL_TEXTURE_2D, texturedata->t_id);
+            // set the texture wrapping/filtering options (on currently bound texture)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            // load and generate the texture
+            stbi_set_flip_vertically_on_load(true);
+            texturedata->images.pixels = stbi_load(texturedata->t_path.c_str(), &texturedata->images.width, &texturedata->images.height, &texturedata->nrChannels, 0);
+            if (texturedata->images.pixels) {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texturedata->images.width, texturedata->images.height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, texturedata->images.pixels);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                Logger::INFO("Texture loaded successfully: " + texturedata->t_path + " (" + to_string(texturedata->images.width) + "x" + to_string(texturedata->images.height) + ")\n");
+                stbi_image_free(texturedata->images.pixels);
+            }
+            else {
+                Logger::ERROR("Texture loaded unsuccessfully: " + texturedata->t_path + " (" + to_string(texturedata->images.width) + "x" + to_string(texturedata->images.height) + ")\n" + stbi_failure_reason() + "\n");
+                stbi_image_free(texturedata->images.pixels);
+            }
+            return texturedata->t_id;
+        }
+        void Bind(Texture2DData* texturedata) override {
+            glActiveTexture(texturedata->t_unit);
+            glBindTexture(GL_TEXTURE_2D, texturedata->t_id);
+        }
+
         //
         void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name)override {
             int loc = glGetUniformLocation(shaderID, name);
@@ -262,6 +301,9 @@ namespace API {
 
         void set_int(unsigned int shaderID, int setint, const GLchar* name)override {
             int loc = glGetUniformLocation(shaderID, name);
+            if (loc == -1) {
+                std::cout << "Uniform not found!\n";
+            }
             glUniform1i(loc, setint);
         }
 

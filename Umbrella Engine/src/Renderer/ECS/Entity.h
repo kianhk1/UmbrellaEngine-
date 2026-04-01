@@ -11,6 +11,7 @@ public:
 	std::vector<Component*> components;
 protected:
 	// State
+	//static int count;
 	bool isVisible = true;
 	bool isActive = true;
 public:

@@ -32,6 +32,7 @@ public:
 		// بعد Tick بقیه Componentها
 		for (auto c : components) {
 			if (c->isActive) c->Update(dt);
+			//Logger::ERROR("kttryrdrdhyrd");
 		}
 	}
 

@@ -128,8 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
-    <ClCompile Include="src\Renderer\Core\loadTextures.cpp" />
-    <ClCompile Include="src\Renderer\Core\mesh.cpp" />
+    <ClCompile Include="src\Renderer\Data\loadTextures.cpp" />
     <ClCompile Include="Umbrella Engine.cpp" />
     <ClCompile Include="vendor\Source.cpp" />
   </ItemGroup>
@@ -137,10 +136,9 @@
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
-    <ClInclude Include="src\Renderer\Core\loadTextures.h" />
-    <ClInclude Include="src\Renderer\Core\MaterialData.h" />
-    <ClInclude Include="src\Renderer\Core\mesh.h" />
-    <ClInclude Include="src\Renderer\Core\Shader.h" />
+    <ClInclude Include="src\Renderer\Data\Data.h" />
+    <ClInclude Include="src\Renderer\Data\loadTextures.h" />
+    <ClInclude Include="src\Renderer\Data\MaterialData.h" />
     <ClInclude Include="src\Renderer\ECS\Component.h" />
     <ClInclude Include="src\Renderer\ECS\Entity.h" />
     <ClInclude Include="src\Renderer\ECS\Object.h" />

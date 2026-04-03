@@ -3,16 +3,9 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <map>
-#include <vector>
 #include "stb_image.h"
 #include "GraphicsAPI.h"
-#include "../../../Core/Log Managment/Logger.h"
-#include "../../Core/mesh.h"
-#include "../../Core/MaterialData.h"
+
 
 namespace API {
     class openglAPI : public GraphicsAPI {
@@ -142,6 +135,9 @@ namespace API {
             // اطمینان از اینکه موس در محدوده پنجره است
             return (xpos >= 0 && xpos < width && ypos >= 0 && ypos < height);
         }
+        bool GetKey(int keyname, int mode) override {
+            return glfwGetKey(Window, keyname) == mode;
+        }
         Size GetSize() override {
             return display;
         }
@@ -177,76 +173,95 @@ namespace API {
         }
 
         // مدیریت شیدرها
-        ShaderData createShader(const std::string& path_Vertex_Shader, const std::string& path_Fragment_Shader) override {
+        DATA::ShaderData createShader(const std::string& path_Vertex_Shader, const std::string& path_Fragment_Shader) override {
             unsigned int shaderID = glCreateProgram();
             unsigned int vsID = compileShader(GL_VERTEX_SHADER, path_Vertex_Shader.c_str());
             unsigned int fsID = compileShader(GL_FRAGMENT_SHADER, path_Fragment_Shader.c_str());
             linkShaderProgram(shaderID, vsID, fsID);
-            ShaderData data;
+            DATA::ShaderData data;
             data.programID = shaderID;
             return data;
         }
-        void deleteShader(ShaderData& shader) override {
+        void deleteShader(DATA::ShaderData& shader) override {
             if (shader.programID != 0) {
                 glDeleteProgram(shader.programID);
                 shader.programID = 0;
             }
         }
-        void useShader(const ShaderData& shader) override {
+        void useShader(const DATA::ShaderData& shader) override {
             glUseProgram(shader.programID);
         }
 
         // مدیریت مش‌ها (Vertex/Index data)
-        void createVAO(MeshData* data) {
+        void createVAO(DATA::MeshData* data) {
             glGenVertexArrays(1, &data->vaoID);
             glBindVertexArray(data->vaoID);
         }
-        void BindVao(MeshData* data) {
+        void BindVao(DATA::MeshData* data) {
             glBindVertexArray(data->vaoID);
             glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
             glEnableVertexAttribArray(data->iboID);
         }
-        void createVBO(MeshData* data, float* vertex, int a) {
+        void createVBO(DATA::MeshData* data, float* vertex, int a) {
             glBindVertexArray(data->vaoID);
             glGenBuffers(1, &data->vboID);
             glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a, vertex, GL_STATIC_DRAW);
         }
-        void createIBO(MeshData* data, unsigned int* indexes, int a) {
+        void createIBO(DATA::MeshData* data, unsigned int* indexes, int a) {
             glBindVertexArray(data->vaoID);
             glGenBuffers(1, &data->iboID);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->iboID);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * a, indexes, GL_STATIC_DRAW);
         }
-        void setAttrib(MeshData* data, int a, int b, int c, int d) override {
+        void setAttrib(DATA::MeshData* data, int a, int b, int c, int d) override {
             glBindVertexArray(data->vaoID);
             glEnableVertexAttribArray(a);
             glBindBuffer(GL_ARRAY_BUFFER, data->vboID);
             glVertexAttribPointer(a, b, GL_FLOAT, GL_FALSE, c * sizeof(float), (void*)(d * sizeof(float)));
         }
-        MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) override {
-            MeshData* buffers = new MeshData();
+        DATA::MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) override {
+            DATA::MeshData* buffers = new DATA::MeshData();
             createVAO(buffers);
             createVBO(buffers, vertices.data(), vertices.size());
             createIBO(buffers,indices.data(), vertices.size());
             buffers->indexCount = indices.size();
             return buffers;
         }
-        void deleteMesh(MeshData* buffers) override {
+        void deleteMesh(DATA::MeshData* buffers) override {
             if (buffers->vaoID != 0) glDeleteVertexArrays(1, &buffers->vaoID);
             if (buffers->vboID != 0) glDeleteBuffers(1, &buffers->vboID);
             if (buffers->iboID != 0) glDeleteBuffers(1, &buffers->iboID);
             buffers->vaoID = buffers->vboID = buffers->iboID = 0;
             buffers->indexCount = 0;
         }
-        void drawMesh(MeshData* buffers) override {
+        void drawMesh(DATA::MeshData* buffers) override {
             glBindVertexArray(buffers->vaoID);
             glDrawElements(GL_TRIANGLES, buffers->indexCount, GL_UNSIGNED_INT, 0);
         }
+        unsigned int createUBO(long long int size_ptr) override {
+            unsigned int UBO;
+            glGenBuffers(1, &UBO);
+            glBindBuffer(GL_UNIFORM_BUFFER, UBO);
+            glBufferData(GL_UNIFORM_BUFFER, size_ptr, NULL, GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            return UBO;
+        }
+        void BindBuffer(unsigned int UBO, int slotNumber, int offset, int size) override {
+            glBindBuffer(GL_UNIFORM_BUFFER, UBO);
+            glBindBufferRange(GL_UNIFORM_BUFFER, slotNumber, UBO, offset, size);
+            //glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        }
+        void UpdateBuffer(unsigned int UBO, void* data, size_t offset, size_t datasize) override {
+            glBindBuffer(GL_UNIFORM_BUFFER, UBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, offset, datasize, data);
+            //glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        }
 
+        #define ActiveBuffer(Buffer, code) glBindBuffer(GL_UNIFORM_BUFFER, Buffer); code glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // texture
-        void Load2DTexture(Texture2DData* texturedata) override {
+        void Load2DTexture(DATA::Texture2DData* texturedata) override {
             auto it = texturedata->Texturesid.find(texturedata->t_path);
 
             if (it != texturedata->Texturesid.end()) {
@@ -255,7 +270,7 @@ namespace API {
             }
             texturedata->Texturesid.emplace(texturedata->t_path, loadimage(texturedata));
         }
-        unsigned int loadimage(Texture2DData* texturedata) {
+        unsigned int loadimage(DATA::Texture2DData* texturedata) {
             glGenTextures(1, &texturedata->t_id);
             glBindTexture(GL_TEXTURE_2D, texturedata->t_id);
             // set the texture wrapping/filtering options (on currently bound texture)
@@ -265,20 +280,20 @@ namespace API {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             // load and generate the texture
             stbi_set_flip_vertically_on_load(true);
-            texturedata->images.pixels = stbi_load(texturedata->t_path.c_str(), &texturedata->images.width, &texturedata->images.height, &texturedata->nrChannels, 0);
-            if (texturedata->images.pixels) {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texturedata->images.width, texturedata->images.height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, texturedata->images.pixels);
+            texturedata->pixels = stbi_load(texturedata->t_path.c_str(), &texturedata->width, &texturedata->height, &texturedata->nrChannels, 0);
+            if (texturedata->pixels) {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texturedata->width, texturedata->height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, texturedata->pixels);
                 glGenerateMipmap(GL_TEXTURE_2D);
-                Logger::INFO("Texture loaded successfully: " + texturedata->t_path + " (" + to_string(texturedata->images.width) + "x" + to_string(texturedata->images.height) + ")\n");
-                stbi_image_free(texturedata->images.pixels);
+                Logger::INFO("Texture loaded successfully: " + texturedata->t_path + " (" + to_string(texturedata->width) + "x" + to_string(texturedata->height) + ")\n");
+                stbi_image_free(texturedata->pixels);
             }
             else {
-                Logger::ERROR("Texture loaded unsuccessfully: " + texturedata->t_path + " (" + to_string(texturedata->images.width) + "x" + to_string(texturedata->images.height) + ")\n" + stbi_failure_reason() + "\n");
-                stbi_image_free(texturedata->images.pixels);
+                Logger::ERROR("Texture loaded unsuccessfully: " + texturedata->t_path + " (" + to_string(texturedata->width) + "x" + to_string(texturedata->height) + ")\n" + stbi_failure_reason() + "\n");
+                stbi_image_free(texturedata->pixels);
             }
             return texturedata->t_id;
         }
-        void Bind(Texture2DData* texturedata) override {
+        void Bind(DATA::Texture2DData* texturedata) override {
             glActiveTexture(texturedata->t_unit);
             glBindTexture(GL_TEXTURE_2D, texturedata->t_id);
         }
@@ -307,9 +322,13 @@ namespace API {
             glUniform1i(loc, setint);
         }
 
-        virtual void set_bool(unsigned int shaderID, bool setbool, const GLchar* name)override {
+        void set_bool(unsigned int shaderID, bool setbool, const GLchar* name)override {
             int loc = glGetUniformLocation(shaderID, name);
             glUniform1i(loc, setbool);
+        }
+
+        GLFWwindow* getwindow() override {
+            return Window;
         }
 
         // دریافت وضعیت API (مثلاً آیا اولیه شده است)

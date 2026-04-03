@@ -7,30 +7,10 @@
 #include <map>
 #include <vector>
 #include "../../../Core/Log Managment/Logger.h"
+#include "../../Data/Data.h"
 
 using namespace std;
 
-struct ShaderData {
-    unsigned int programID;
-};
-
-struct MeshData {
-    unsigned int vaoID = 0;
-    unsigned int vboID = 0;
-    unsigned int iboID = 0;
-    int indexCount = 0;
-};
-
-struct Texture2DData
-{
-    string t_path;
-    unsigned int t_id;
-    int t_unit = GL_TEXTURE0;
-    GLFWimage images;
-    int nrChannels;
-    static std::map<string, unsigned int> Texturesid;
-};
-std::map<string, unsigned int> Texture2DData::Texturesid;
 namespace API {
     struct Size { int width; int height; };
     struct Point { int x; int y; };
@@ -61,6 +41,7 @@ namespace API {
         //virtual void EnableCursor(void) = 0;                                    /// Enables cursor (unlock cursor)
         //virtual void DisableCursor(void) = 0;                                   /// Disables cursor (lock cursor)
         virtual bool IsCursorOnScreen(void) = 0;
+        virtual bool GetKey(int keyname, int mode) = 0;
         virtual Size GetSize() = 0;
 
         virtual bool initialize() = 0; // مقداردهی اولیه API
@@ -71,19 +52,22 @@ namespace API {
         virtual void clearBuffers() = 0; // پاک کردن بافر رنگ و عمق
 
         // مدیریت شیدرها
-        virtual ShaderData createShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) = 0;
-        virtual void deleteShader(ShaderData& shader) = 0;
-        virtual void useShader(const ShaderData& shader) = 0;
+        virtual DATA::ShaderData createShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) = 0;
+        virtual void deleteShader(DATA::ShaderData& shader) = 0;
+        virtual void useShader(const DATA::ShaderData& shader) = 0;
 
         // مدیریت مش‌ها (Vertex/Index data)
-        virtual void setAttrib(MeshData* data, int a, int b, int c, int d) = 0;
-        virtual MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) = 0;
-        virtual void deleteMesh(MeshData* buffers) = 0;
-        virtual void drawMesh(MeshData* buffers) = 0;
+        virtual void setAttrib(DATA::MeshData* data, int a, int b, int c, int d) = 0;
+        virtual DATA::MeshData* createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) = 0;
+        virtual void deleteMesh(DATA::MeshData* buffers) = 0;
+        virtual void drawMesh(DATA::MeshData* buffers) = 0;
+        virtual unsigned int createUBO(long long int size_ptr) = 0;
+        virtual void UpdateBuffer(unsigned int UBO, void* data, size_t offset, size_t datasize) = 0;
+        virtual void BindBuffer(unsigned int UBO, int slotNumber, int offset, int size) = 0;
 
         // texture
-        virtual void Load2DTexture(Texture2DData* texturedata) = 0;
-        virtual void Bind(Texture2DData* texturedata) = 0;
+        virtual void Load2DTexture(DATA::Texture2DData* texturedata) = 0;
+        virtual void Bind(DATA::Texture2DData* texturedata) = 0;
 
         //
         virtual void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name) = 0;
@@ -91,6 +75,8 @@ namespace API {
         virtual void set_float(unsigned int shaderID, float setfloat, const GLchar* name) = 0;
         virtual void set_int(unsigned int shaderID, int setint, const GLchar* name) = 0;
         virtual void set_bool(unsigned int shaderID, bool setbool, const GLchar* name) = 0;
+
+        virtual GLFWwindow* getwindow() = 0;
 
         // دریافت وضعیت API (مثلاً آیا اولیه شده است)
         virtual void update() = 0;

@@ -18,10 +18,7 @@
     <ClCompile Include="Umbrella Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Renderer\Core\loadTextures.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Renderer\Core\mesh.cpp">
+    <ClCompile Include="src\Renderer\Data\loadTextures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Core\Log Managment\Logger .cpp">
@@ -35,19 +32,13 @@
     <ClInclude Include="Umbrella Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\Core\loadTextures.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Renderer\Core\mesh.h">
+    <ClInclude Include="src\Renderer\Data\loadTextures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Core\Log Managment\Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Renderer\Core\MaterialData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Renderer\Core\Shader.h">
+    <ClInclude Include="src\Renderer\Data\MaterialData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h">
@@ -69,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Renderer\ECS\RenderQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Data\Data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

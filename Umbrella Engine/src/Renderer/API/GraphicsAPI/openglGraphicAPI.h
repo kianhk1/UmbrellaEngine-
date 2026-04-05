@@ -85,9 +85,10 @@ namespace API {
 
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
             if (m_isFullscreen) {
                 glfwSetWindowMonitor(Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                screen.height = mode->height;
+                screen.width = mode->width;
                 glViewport(0, 0, mode->width, mode->height);
             }
             else {
@@ -95,7 +96,7 @@ namespace API {
                 glViewport(0, 0, display.width, display.height);
             }
         }
-        void ToggleFullscreen()override {
+        void ToggleFullscreen() override {
             static bool wasPressed = false;
             bool isPressed = glfwGetKey(Window, GLFW_KEY_F11) == GLFW_PRESS;
             if (isPressed && !wasPressed) {
@@ -138,8 +139,10 @@ namespace API {
         bool GetKey(int keyname, int mode) override {
             return glfwGetKey(Window, keyname) == mode;
         }
-        Size GetSize() override {
-            return display;
+        Size* GetSize() override {
+            if(!m_isFullscreen)
+                return &display;
+            return &screen;
         }
 
         // مقداردهی اولیه API

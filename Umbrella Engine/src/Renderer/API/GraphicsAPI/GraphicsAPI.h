@@ -42,7 +42,7 @@ namespace API {
         //virtual void DisableCursor(void) = 0;                                   /// Disables cursor (lock cursor)
         virtual bool IsCursorOnScreen(void) = 0;
         virtual bool GetKey(int keyname, int mode) = 0;
-        virtual Size GetSize() = 0;
+        virtual Size* GetSize() = 0;
 
         virtual bool initialize() = 0; // مقداردهی اولیه API
         virtual void shutdown() = 0;   // پاکسازی منابع

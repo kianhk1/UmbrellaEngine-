@@ -14,6 +14,7 @@ public:
 		AddComponent(texture);
 	}
 	void Start() override {
+		Entity::Start();
 		GetComponent<MeshComponent>()->setAttrib(0, 3, 14, 0);
 		GetComponent<MeshComponent>()->setAttrib(1, 3, 14, 3);
 		GetComponent<MeshComponent>()->setAttrib(2, 2, 14, 6);
@@ -72,3 +73,22 @@ private:
 	   20,21,22,22,23,20        // پایین
 	};
 };
+/*class Camera : public Entity
+{
+public:
+	Camera(std::shared_ptr<API::GraphicsAPI> Graphic, DATA::Texture2DData* t_data) {
+		Component* transform = new TransformComponent(Graphic);
+		AddComponent(transform);
+		Component* camera = new CameraComponent(Graphic, t_data, GetComponent<ShaderComponent>()->shaderdata);
+		AddComponent(camera);
+	}
+	void Start() override {
+		Entity::Start();
+
+	}
+	void Update(float dt) override {
+		Entity::Update(dt);
+		GetComponent<Texture2DComponent>()->Bind();
+	}
+private:
+};*/

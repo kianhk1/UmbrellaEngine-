@@ -12,20 +12,20 @@ public:
     void Start() {
         for (Entity* entity : GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
+            //entity->Start();
             TransformComponent* transform = entity->GetComponent<TransformComponent>();
             CameraComponent* camera = entity->GetComponent<CameraComponent>();
             auto& graphic = camera->graphic;
             if (camera && transform) {
 
                 entity->GetComponent<CameraComponent>()->UBO_ID = graphic->createUBO(sizeof(Cam_Data));
-                Logger::WARN(to_string(camera->UBO_ID));
                 graphic->BindBuffer(camera->UBO_ID, 0, 0, sizeof(Cam_Data));
             }
         }
         glBindVertexArray(0); // Unbind VAO after loop
         glUseProgram(0);      // Unbind shader after loop
     }
-    void Update() {
+    void Update(float dt) {
         for (Entity* entity : GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
             TransformComponent* transform = entity->GetComponent<TransformComponent>();
@@ -39,6 +39,8 @@ public:
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(transform->position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
             }
         }
+        Move(dt);
+        Render();
     }
     void Render() {
         // برای هر موجودیت در دنیای بازی:

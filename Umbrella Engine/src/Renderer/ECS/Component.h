@@ -57,9 +57,13 @@ public:
 		if (parent) modelMatrix = parent->modelMatrix * localMatrix;
 		else modelMatrix = localMatrix;
 
-		forward = glm::vec3(modelMatrix[2]); // محور Z جهانی شده
-		up = glm::vec3(modelMatrix[1]); // محور Y جهانی شده
-		right = glm::vec3(modelMatrix[0]);
+		//forward = glm::vec3(modelMatrix[2]); // محور Z جهانی شده
+		//up = glm::vec3(modelMatrix[1]); // محور Y جهانی شده
+		//right = glm::vec3(modelMatrix[0]);
+		right = glm::cross(forward, up);
+		/*Logger::WARN("x:" + to_string(forward.x) + "\n");
+		Logger::WARN("y:" + to_string(forward.y) + "\n");
+		Logger::WARN("z:" + to_string(forward.z) + "\n");*/
 	}
 	void Start() override {
 
@@ -149,14 +153,49 @@ public:
 		default:
 			break;
 		}
+		glm::vec3 direction;
+		direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		direction.y = sin(glm::radians(pitch));
+		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		transform->forward = glm::normalize(direction);
+		//transform->rotation = glm::vec3(glm::radians(yaw), glm::radians(pitch), 0.0);
+		transform->right = glm::cross(transform->forward, transform->up);
 		cameradata.view = glm::lookAt(transform->position, transform->position + transform->forward, transform->up);
+	}
+	static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+		static float lastX = 400, lastY = 300;
 
+		CameraComponent* cam = static_cast<CameraComponent*>(glfwGetWindowUserPointer(window));
+		if (cam->firstMouse)
+		{
+			lastX = xpos;
+			lastY = ypos;
+			cam->firstMouse = false;
+		}
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos;
+		lastX = xpos;
+		lastY = ypos;
+		float sensitivity = 0.1f;
+		xoffset *= sensitivity;
+		yoffset *= sensitivity;
+		yaw += xoffset;
+		pitch += yoffset;
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
 	}
 	TransformComponent* transform = nullptr;
 	DATA::CameraData cameradata;
 	ProjectionType type;
 	int UBO_ID;
+	float sensitivity = 0.1f;
+	static float yaw, pitch;
+	static bool firstMouse;
 };
+float CameraComponent::yaw, CameraComponent::pitch;
+bool CameraComponent::firstMouse = true;
 class aa : public Component {
 public:
 	aa(

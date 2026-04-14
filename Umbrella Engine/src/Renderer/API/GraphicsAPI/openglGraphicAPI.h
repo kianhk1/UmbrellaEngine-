@@ -15,13 +15,13 @@ namespace API {
                 return;
             int major, minor, rev;
             glfwGetVersion(&major, &minor, &rev);
-            Logger::INFO("GLFW version: " + to_string(major) + "." + to_string(minor) + "." + to_string(rev) + '\n');
+            Info("GLFW version: " + to_string(major) + "." + to_string(minor) + "." + to_string(rev) + '\n');
         }
         void InitGlad() {
             if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
                 return;
             const GLubyte* version = glGetString(GL_VERSION);
-            Logger::INFO("OpenGL Version: " + string(reinterpret_cast<const char*>(version)) + '\n');
+            Info("OpenGL Version: " + string(reinterpret_cast<const char*>(version)) + '\n');
 
         }
         void InitWindow(int width, int height, const char* title)override {
@@ -227,7 +227,7 @@ namespace API {
             DATA::MeshData* buffers = new DATA::MeshData();
             createVAO(buffers);
             createVBO(buffers, vertices.data(), vertices.size());
-            createIBO(buffers,indices.data(), vertices.size());
+            createIBO(buffers,indices.data(), indices.size());
             buffers->indexCount = indices.size();
             return buffers;
         }
@@ -287,7 +287,7 @@ namespace API {
             if (texturedata->pixels) {
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texturedata->width, texturedata->height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, texturedata->pixels);
                 glGenerateMipmap(GL_TEXTURE_2D);
-                Logger::INFO("Texture loaded successfully: " + texturedata->t_path + " (" + to_string(texturedata->width) + "x" + to_string(texturedata->height) + ")\n");
+                Info("Texture loaded successfully: " + texturedata->t_path + " (" + to_string(texturedata->width) + "x" + to_string(texturedata->height) + ")\n");
                 stbi_image_free(texturedata->pixels);
             }
             else {
@@ -310,6 +310,11 @@ namespace API {
         void set_vec3(unsigned int shaderID, glm::vec3 setvec3, const GLchar* name)override {
             int loc = glGetUniformLocation(shaderID, name);
             glUniform3fv(loc, 1, glm::value_ptr(setvec3));
+        }
+
+        void set_vec4(unsigned int shaderID, glm::vec4 setvec4, const GLchar* name)override {
+            int loc = glGetUniformLocation(shaderID, name);
+            glUniform4fv(loc, 1, glm::value_ptr(setvec4));
         }
 
         void set_float(unsigned int shaderID, float setfloat, const GLchar* name)override {

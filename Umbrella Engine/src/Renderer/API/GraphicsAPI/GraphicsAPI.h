@@ -8,6 +8,7 @@
 #include <vector>
 #include "../../../Core/Log Managment/Logger.h"
 #include "../../Data/Data.h"
+#include "../../Data/MaterialData.h"
 
 using namespace std;
 
@@ -72,6 +73,7 @@ namespace API {
         //
         virtual void set_mat4(unsigned int shaderID, glm::mat4 setmat4, const GLchar* name) = 0;
         virtual void set_vec3(unsigned int shaderID, glm::vec3 setvec3, const GLchar* name) = 0;
+        virtual void set_vec4(unsigned int shaderID, glm::vec4 setvec4, const GLchar* name) = 0;
         virtual void set_float(unsigned int shaderID, float setfloat, const GLchar* name) = 0;
         virtual void set_int(unsigned int shaderID, int setint, const GLchar* name) = 0;
         virtual void set_bool(unsigned int shaderID, bool setbool, const GLchar* name) = 0;

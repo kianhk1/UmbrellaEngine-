@@ -1,5 +1,5 @@
 #pragma once
-#include "Entity.h"
+#include "Object.h"
 struct Cam_Data
 {
     glm::mat4 projection;
@@ -15,11 +15,15 @@ public:
             //entity->Start();
             TransformComponent* transform = entity->GetComponent<TransformComponent>();
             CameraComponent* camera = entity->GetComponent<CameraComponent>();
-            auto& graphic = camera->graphic;
+            LightComponent* light = entity->GetComponent<LightComponent>();
+            auto& graphic = transform->graphic;
             if (camera && transform) {
-
                 entity->GetComponent<CameraComponent>()->UBO_ID = graphic->createUBO(sizeof(Cam_Data));
                 graphic->BindBuffer(camera->UBO_ID, 0, 0, sizeof(Cam_Data));
+            }
+            if (light && transform) {
+                entity->GetComponent<LightComponent>()->UBO_ID = graphic->createUBO(32);
+                graphic->BindBuffer(light->UBO_ID, 1, 0, 32);
             }
         }
         glBindVertexArray(0); // Unbind VAO after loop
@@ -30,13 +34,18 @@ public:
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
             TransformComponent* transform = entity->GetComponent<TransformComponent>();
             CameraComponent* camera = entity->GetComponent<CameraComponent>();
-            auto& graphic = camera->graphic;
+            LightComponent* light = entity->GetComponent<LightComponent>();
+            auto& graphic = transform->graphic;
             if (camera && transform) {
                 //Logger::WARN(to_string(camera->cameradata.projection[2].a));
                // Cam_Data data{ camera->cameradata.projection,camera->cameradata.view,transform->position };
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(camera->cameradata.projection),0, sizeof(glm::mat4));
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(camera->cameradata.view), sizeof(glm::mat4), sizeof(glm::mat4));
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(transform->position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
+            }
+            if (light && transform) {
+                graphic->UpdateBuffer(light->UBO_ID, glm::value_ptr(light->light.lightcolor), 0, sizeof(glm::vec4));
+                graphic->UpdateBuffer(light->UBO_ID, glm::value_ptr(transform->position), sizeof(glm::vec4), sizeof(glm::vec4));
             }
         }
         Move(dt);
@@ -48,9 +57,11 @@ public:
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
             TransformComponent* transform = entity->GetComponent<TransformComponent>();
             MeshComponent* mesh = entity->GetComponent<MeshComponent>();
-            ShaderComponent* shader = entity->GetComponent<ShaderComponent>();
+            MaterialComponent* material = entity->GetComponent<MaterialComponent>();
 
-            if (transform && mesh && shader) {
+            Obj* Entity = dynamic_cast<Obj*>(entity);
+
+            if (transform && mesh && material) {
                 mesh->draw();
             }
         }
@@ -88,11 +99,10 @@ public:
             }
         }
     }
-    Entity* AddEntity() {
-        auto entity = std::make_shared<Entity>();
-        entity->id = nextEntityID++;
-        entities.push_back(std::move(entity));
-        return entities.back().get();
+    Entity* AddEntity(vector<std::shared_ptr<Obj>> Entities) {
+        entities.insert(entities.end(), Entities.begin(), Entities.end());
+        Info(to_string(entities.size()));
+        //return entities.back().get();
     }
     Entity* AddEntity(Entity* entity) {
         entity->id = nextEntityID++;

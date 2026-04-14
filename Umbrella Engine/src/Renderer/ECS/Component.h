@@ -60,10 +60,11 @@ public:
 		//forward = glm::vec3(modelMatrix[2]); // محور Z جهانی شده
 		//up = glm::vec3(modelMatrix[1]); // محور Y جهانی شده
 		//right = glm::vec3(modelMatrix[0]);
-		right = glm::cross(forward, up);
-		/*Logger::WARN("x:" + to_string(forward.x) + "\n");
-		Logger::WARN("y:" + to_string(forward.y) + "\n");
-		Logger::WARN("z:" + to_string(forward.z) + "\n");*/
+		right = glm::normalize(glm::cross(forward, up));
+		/*Logger::WARN("x:" + to_string(right.x) + "\n");
+		Logger::WARN("y:" + to_string(right.y) + "\n");
+		Logger::WARN("z:" + to_string(right.z) + "\n");*/
+
 	}
 	void Start() override {
 
@@ -103,12 +104,14 @@ public:
 		graphic->useShader(shader);
 		graphic->drawMesh(meshdata);
 	}
+	std::string name = "";
 	DATA::ShaderData shader;
 	DATA::MeshData* meshdata;
 };
 class Texture2DComponent : public Component {
 public:
-	Texture2DComponent(std::shared_ptr<API::GraphicsAPI> Graphic,
+	Texture2DComponent(
+		std::shared_ptr<API::GraphicsAPI> Graphic,
 		DATA::Texture2DData* T_data,
 		DATA::ShaderData Shader)
 		: Component(Graphic), t_data(T_data), shader(Shader) {
@@ -141,7 +144,7 @@ public:
 		cameradata.AspectRatio = AspectRatio;
 	}
 	void Update(float dt) override {
-		//if (transform) Logger::WARN("jyvjgghjhvjgh\n");
+		//if (transform) Warn("jyvjgghjhvjgh\n");
 		switch (type)
 		{
 		case ProjectionType::Perspective:
@@ -158,8 +161,7 @@ public:
 		direction.y = sin(glm::radians(pitch));
 		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 		transform->forward = glm::normalize(direction);
-		//transform->rotation = glm::vec3(glm::radians(yaw), glm::radians(pitch), 0.0);
-		transform->right = glm::cross(transform->forward, transform->up);
+		transform->right = glm::normalize(glm::cross(transform->forward, transform->up));
 		cameradata.view = glm::lookAt(transform->position, transform->position + transform->forward, transform->up);
 	}
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -201,4 +203,122 @@ public:
 	aa(
 		std::shared_ptr<API::GraphicsAPI> Graphic)
 		: Component(Graphic) {}
+};
+class LightComponent : public Component {
+public:
+	LightComponent(
+		std::shared_ptr<API::GraphicsAPI> Graphic,
+		glm::vec3 lightcolor)
+		: Component(Graphic) {
+		light.lightcolor = lightcolor;
+	}
+	int UBO_ID;
+	DATA::LightData light;
+};
+class MaterialComponent : public Component {
+public:
+	MaterialComponent(
+		std::shared_ptr<API::GraphicsAPI> Graphic,
+		const std::string& albedoTexturepath,
+		const std::string& normalMappath = "",
+		const std::string& specularMappath = "",
+		const std::string& path_Vertex_Shader = "",
+		const std::string& path_Fragment_Shader = "")
+		: Component(Graphic) {
+		material.albedoTexturedata.t_path = albedoTexturepath;
+		material.normalMapdata.t_path = normalMappath;
+		material.specularMapdata.t_path = specularMappath;
+
+		material.albedoTexturedata.t_unit = GL_TEXTURE0;
+		material.specularMapdata.t_unit = GL_TEXTURE1;
+		material.normalMapdata.t_unit = GL_TEXTURE2;
+
+
+		shader = new ShaderComponent(graphic, path_Vertex_Shader, path_Fragment_Shader);
+		albedoTexture = new Texture2DComponent(graphic, &material.albedoTexturedata, shader->shaderdata);
+		normalMap = new Texture2DComponent(graphic, &material.normalMapdata, shader->shaderdata);
+		specularMap = new Texture2DComponent(graphic, &material.specularMapdata, shader->shaderdata);
+	}
+	// تنظیم رنگ پایه
+	#define color(r,g,b,a) glm::vec4(r,g,b,a)
+	void setBaseColor(float r, float g, float b, float a = 1.0f) {
+		material.baseColor = color(r, g, b, a);
+	}
+	void setBaseColor(const glm::vec4& color) {
+			material.baseColor = color;
+	}
+
+	// تنظیم مسیر تکسچر رنگ پایه
+	void setAlbedoTexture(const std::string& path) {
+		material.albedoTexturedata.t_path = path;
+	}
+
+	// تنظیم مسیر تکسچر معمولی
+	void setNormalMapTexture(const std::string& path) {
+		material.normalMapdata.t_path = path;
+	}
+
+	// تنظیم مسیر تکسچر بازتاب (Specular Map)
+	void setSpecularMapTexture(const std::string& path) {
+		material.specularMapdata.t_path = path;
+	}
+
+	// تنظیم رنگ بازتاب (Specular Color)
+	void setSpecularColor(float r, float g, float b) {
+		material.specularColor = color(r, g, b, 1.0f);
+	}
+
+	// تنظیم میزان درخشندگی (Shininess)
+	void setShininess(float shininess_value) {
+		material.shininess = shininess_value;
+	}
+
+	// تنظیم میزان شفافیت (Transparency/Opacity)
+	void setTransparency(float alpha) {
+		material.transparency = alpha;
+		// اگر شفافیت کمتر از 1 باشه، ممکنه نیاز باشه flag ای برای فعال کردن blending تنظیم بشه.
+	}
+
+	// --- دریافت کننده‌ها (Getters) ---
+
+	const glm::vec4& getBaseColor() const { return material.baseColor; }
+	const std::string& getAlbedoTexturePath() const { return material.albedoTexturedata.t_path; }
+	const std::string& getNormalMapTexturePath() const { return material.normalMapdata.t_path; }
+	const std::string& getSpecularMapTexturePath() const { return material.specularMapdata.t_path; }
+	const glm::vec3& getSpecularColor() const { return material.specularColor; }
+	float getShininess() const { return material.shininess; }
+	float getTransparency() const { return material.transparency; }
+
+	// --- متدهای کمکی ---
+
+	// بررسی اینکه آیا تکسچر رنگ پایه تنظیم شده است؟
+	bool hasAlbedoTexture() const { return !material.albedoTexturedata.t_path.empty(); }
+	bool hasNormalMapTexture() const { return !material.normalMapdata.t_path.empty(); }
+	bool hasSpecularMapTexture() const { return !material.specularMapdata.t_path.empty(); }
+
+	void Start() override {
+		albedoTexture->set_texture("albedoTexture");
+		normalMap->set_texture("normalTexture");
+		specularMap->set_texture("specularTexture");
+
+		//graphic->set_float(shader->shaderdata.programID, material.shininess, "");
+		//graphic->set_vec4(shader->shaderdata.programID, material.baseColor, "");
+		//graphic->set_vec3(shader->shaderdata.programID, material.specularColor, "");
+	}
+	void Update(float dt) override {
+		albedoTexture->Bind();
+		normalMap->Bind();
+		specularMap->Bind();
+
+		//graphic->set_float(shader->shaderdata.programID, material.shininess, "");
+		//graphic->set_vec4(shader->shaderdata.programID, material.baseColor, "");
+		//graphic->set_vec3(shader->shaderdata.programID, material.specularColor, "");
+	}
+	ShaderComponent* shader;
+private:
+	DATA::MaterialData material;
+
+	Texture2DComponent* albedoTexture;
+	Texture2DComponent* normalMap;
+	Texture2DComponent* specularMap;
 };

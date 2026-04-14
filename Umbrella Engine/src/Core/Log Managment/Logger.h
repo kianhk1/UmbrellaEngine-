@@ -6,7 +6,8 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#define Warn(x) Logger::WARN("[\033[1;34mLINE:" + to_string(__LINE__)+ "\033[0m]" + "[\033[1;34mFILE:" +std::string(__FILE__)+ "\033[0m]\n" + x)
+#define Info(x) Logger::INFO("[\033[1;34mLINE:" + to_string(__LINE__)+ "\033[0m]\n" + x)
 using namespace std;
 enum class LogLevel{
 	INFO,

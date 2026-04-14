@@ -65,6 +65,9 @@
     <ClInclude Include="src\Renderer\Data\Data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Input\InputManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="FileName.txt" />

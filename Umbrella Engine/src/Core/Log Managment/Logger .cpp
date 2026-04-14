@@ -1,6 +1,7 @@
 #include "Logger.h"
-std::string Logger::messages;
 
+//#define warn(x) Logger::WARN("[" +to_string(__LINE__)+ "]" + x)
+std::string Logger::messages;
 
 void Logger::error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
     string msg;

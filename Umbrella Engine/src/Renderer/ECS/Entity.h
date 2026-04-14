@@ -15,7 +15,7 @@ protected:
 	bool isVisible = true;
 	bool isActive = true;
 public:
-	Entity(){}
+	Entity() {}
 	~Entity() {
 		for (auto c : components) delete c;
 	}

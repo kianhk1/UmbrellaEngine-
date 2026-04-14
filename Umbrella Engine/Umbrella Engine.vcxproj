@@ -134,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
+    <ClInclude Include="src\Input\InputManager.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
     <ClInclude Include="src\Renderer\Data\Data.h" />

@@ -36,6 +36,9 @@ namespace DATA {
     {
         std::string t_path;
         unsigned int t_id;
+        Texture2DData() {
+            //t_id++;
+        }
         int t_unit;
         int width;
         int height;

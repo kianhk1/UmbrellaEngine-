@@ -4,29 +4,61 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-class objcube : public Entity
+class Objbase
 {
 public:
-	objcube(std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& t_a, const std::string& t_n, const std::string& t_s) {
-		Component* material = new MaterialComponent(Graphic, t_a, t_n, t_s, "Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
-		AddComponent(material);
-		Component* mesh = new MeshComponent(Graphic, vertex, index, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(mesh);
-		Component* transform = new TransformComponent(Graphic, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(transform);
+	Objbase(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic) : Manager(manager) {
+		entity = Manager->AddEntity();
+		Component* transform = new TransformComponent(Graphic);
+		Manager->AddComponent(transform, entity);
 	}
-	void Start() override {
-		Entity::Start();
-		GetComponent<MeshComponent>()->setAttrib(0, 3, 14, 0);
-		GetComponent<MeshComponent>()->setAttrib(1, 3, 14, 3);
-		GetComponent<MeshComponent>()->setAttrib(2, 2, 14, 6);
-		GetComponent<MeshComponent>()->setAttrib(3, 3, 14, 8);
-		GetComponent<MeshComponent>()->setAttrib(4, 3, 14, 11);
+	void AddComponent(Component* comp) {
+		Manager->AddComponent(comp, entity);
 	}
-	void Update(float dt) override {
-		Entity::Update(dt);
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return Manager->GetComponent<T>(entity);
+		}
+		return nullptr;
 	}
 private:
+	EntityManager* Manager;
+	Entity entity;
+};
+
+class objcube
+{
+public:
+	objcube(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& t_a, const std::string& t_n, const std::string& t_s) : Manager(manager){
+		entity = Manager->AddEntity();
+		Component* material = new MaterialComponent(Graphic, t_a, t_n, t_s, "Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
+		Manager->AddComponent(material, entity);
+		Component* mesh = new MeshComponent(Graphic, vertex, index, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(mesh, entity);
+		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(transform, entity);
+	}
+	void Start() {
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(3, 3, 14, 8);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(4, 3, 14, 11);
+	}
+	void AddComponent(Component* comp) {
+		Manager->AddComponent(comp, entity);
+	}
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return Manager->GetComponent<T>(entity);
+		}
+		return nullptr;
+	}
+private:
+	EntityManager* Manager;
+	Entity entity;
 	std::vector<float> vertex = {
 		//  x,    y,    z,        r,   g,   b,      u,  v,       nx,    ny,    nz,      tx,    ty,    tz
 		// جلو (Front) - تانژانت در راستای X
@@ -74,26 +106,33 @@ private:
 	   20,21,22,22,23,20        // پایین
 	};
 };
-class Camera : public Entity
+class Camera
 {
 public:
-	Camera(std::shared_ptr<API::GraphicsAPI> Graphic,
+	Camera(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic,
 		ProjectionType Type,
-		float AspectRatio) {
+		float AspectRatio) : Manager(manager) {
+		entity = Manager->AddEntity();
 		Component* c_trans = new TransformComponent(Graphic);
-		AddComponent(c_trans);
-		Component* c_cam = new CameraComponent(Graphic, Type, AspectRatio, GetComponent<TransformComponent>());
-		AddComponent(c_cam);
+		Manager->AddComponent(c_trans, entity);
+		Component* c_cam = new CameraComponent(Graphic, Type, AspectRatio, Manager->GetComponent<TransformComponent>(entity));
+		Manager->AddComponent(c_cam, entity);
 	}
-	void Start() override {
-		Entity::Start();
-
+	void AddComponent(Component* comp) {
+		Manager->AddComponent(comp, entity);
 	}
-	void Update(float dt) override {
-		Entity::Update(dt);
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return Manager->GetComponent<T>(entity);
+		}
+		return nullptr;
 	}
+private:
+	EntityManager* Manager;
+	Entity entity;
 };
-class object_load : public Entity
+class object_load
 {
 public:
 	// نگه داشتن اینپورتور به صورت فیلد کلاس برای جلوگیری از حذف داده‌های scene
@@ -103,7 +142,7 @@ public:
 	vector<unsigned int> indices;
 	string DIFFUSE, SPECULAR, NORMALS;
 
-	object_load(std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) {
+	object_load(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : Manager(manager) {
 		// فلگ‌های بهینه شده
 		scene = importer.ReadFile(mpdle_path,
 			aiProcess_Triangulate |
@@ -117,27 +156,33 @@ public:
 			return;
 		}
 		load_model(scene->mRootNode, scene);
+		Info("load model " + scene->mName.C_Str() + "successfully: " + mpdle_path + '\n');
+		entity = Manager->AddEntity();
 		Component* material = new MaterialComponent(Graphic, DIFFUSE, NORMALS, SPECULAR, "Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
-		AddComponent(material);
-		Component* mesh = new MeshComponent(Graphic, vertices, indices, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(mesh);
-		Component* transform = new TransformComponent(Graphic, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(transform);
+		Manager->AddComponent(material, entity);
+		Component* mesh = new MeshComponent(Graphic, vertices, indices, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(mesh, entity);
+		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(transform, entity);
 	}
-	void Start() override {
-		Entity::Start();
-		GetComponent<MeshComponent>()->setAttrib(0, 3, 14, 0);
-		GetComponent<MeshComponent>()->setAttrib(1, 3, 14, 3);
-		GetComponent<MeshComponent>()->setAttrib(2, 2, 14, 6);
-		GetComponent<MeshComponent>()->setAttrib(3, 3, 14, 8);
-		GetComponent<MeshComponent>()->setAttrib(4, 3, 14, 11);
+	void Start() {
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(3, 3, 14, 8);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(4, 3, 14, 11);
 	}
-	void Update(float dt) override {
-		Entity::Update(dt);
+	void AddComponent(Component* comp) {
+		Manager->AddComponent(comp, entity);
 	}
-
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return Manager->GetComponent<T>(entity);
+		}
+		return nullptr;
+	}
 private:
-
 	void load_mesh(aiMesh* mesh, const aiScene* scene) {
 		// اصلاح: پردازش متریال فقط یکبار برای هر مِش، نه برای هر وجه!
 		unsigned int baseIndex = (unsigned int)(vertices.size() / 14);
@@ -225,31 +270,44 @@ private:
 			load_model(node->mChildren[i], scene);
 		}
 	}
+
+	EntityManager* Manager;
+	Entity entity;
 };
 
 
-class Obj : public Entity
+class Obj
 {
 public:
-	Obj(std::shared_ptr<API::GraphicsAPI> Graphic, std::vector<float>& vertices,
+	Obj(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, std::vector<float>& vertices,
 		std::vector<unsigned int>& indices, Component* material) {
-		AddComponent(material);
-		Component* mesh = new MeshComponent(Graphic, vertices, indices, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(mesh);
-		Component* transform = new TransformComponent(Graphic, GetComponent<MaterialComponent>()->shader->shaderdata);
-		AddComponent(transform);
+		entity = Manager->AddEntity();
+		Manager->AddComponent(material, entity);
+		Component* mesh = new MeshComponent(Graphic, vertices, indices, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(mesh, entity);
+		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
+		Manager->AddComponent(transform, entity);
 	}
-	void Start() override {
-		Entity::Start();
-		GetComponent<MeshComponent>()->setAttrib(0, 3, 14, 0);
-		GetComponent<MeshComponent>()->setAttrib(1, 3, 14, 3);
-		GetComponent<MeshComponent>()->setAttrib(2, 2, 14, 6);
-		GetComponent<MeshComponent>()->setAttrib(3, 3, 14, 8);
-		GetComponent<MeshComponent>()->setAttrib(4, 3, 14, 11);
+	void Start() {
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(3, 3, 14, 8);
+		Manager->GetComponent<MeshComponent>(entity)->setAttrib(4, 3, 14, 11);
 	}
-	void Update(float dt) override {
-		Entity::Update(dt);
+	void AddComponent(Component* comp) {
+		Manager->AddComponent(comp, entity);
 	}
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return Manager->GetComponent<T>(entity);
+		}
+		return nullptr;
+	}
+private:
+	EntityManager* Manager;
+	Entity entity;
 };
 struct Node
 {
@@ -276,7 +334,7 @@ public:
 	std::unique_ptr<Node> rootNode;
 	MaterialComponent* material;
 
-	objectload(std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) {
+	objectload(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : Manager(manager) {
 		// فلگ‌های بهینه شده
 		scene = importer.ReadFile(mpdle_path,
 			aiProcess_Triangulate |
@@ -296,19 +354,26 @@ public:
 		TransformComponent* transform = new TransformComponent(Graphic);
 		rootNode->trans = transform;
 		load_model(Graphic, material, scene->mRootNode, scene, rootNode.get());
+		Info("load model " + scene->mName.C_Str() + "successfully: " + mpdle_path);
 	}
 	vector<std::shared_ptr<Obj>>& getEntities() {
-		return entities;
+		return objects;
 	}
 	void Start() {
-		for (auto& entity : entities)
+		for (auto& entity : objects)
 			entity->Start();
 	}
-	void Update(float dt) {
-		for (auto& entity : entities)
-			entity->Update(dt);
+	void AddComponent(Component* comp) {
+		for (auto& obj : objects)
+			obj->AddComponent(comp);
 	}
-
+	template<typename T>
+	T* GetComponent() {
+		if (Manager) {
+			return objects[0]->GetComponent<T>();
+		}
+		return nullptr;
+	}
 private:
 
 	std::shared_ptr<Obj> load_mesh(std::shared_ptr<API::GraphicsAPI> Graphic ,Component* material ,aiMesh* mesh, const aiScene* scene) {
@@ -368,7 +433,7 @@ private:
 				indices.push_back(face.mIndices[j]);
 			}
 		}
-		std::shared_ptr<Obj> obj = make_shared<Obj>(Graphic, vertices, indices, material);
+		std::shared_ptr<Obj> obj = make_shared<Obj>(Manager, Graphic, vertices, indices, material);
 		return obj;
 	}
 
@@ -395,7 +460,7 @@ private:
 
 			auto entity = load_mesh(Graphic, material, mesh, scene);
 			entity->GetComponent< TransformComponent>()->parent = Rootnode->trans;
-			entities.push_back(entity);
+			objects.push_back(entity);
 			Rootnode->addEntity(entity);
 		}
 
@@ -408,7 +473,10 @@ private:
 
 			Rootnode->addNode(cnode);
 			load_model(Graphic, material, child, scene, cnode.get());
+			Info("load node " + child->mName.C_Str() + " successfully");
 		}
 	}
-	vector<std::shared_ptr<Obj>> entities;
+	vector<std::shared_ptr<Obj>> objects;
+	EntityManager* Manager;
+	Entity entity;
 };

@@ -9,20 +9,31 @@ struct Cam_Data
 // --- Systems ---
 class System {
 public:
+    System() {
+        Manager = new EntityManager();
+    }
+    ~System() {
+        delete Manager;
+    }
+    EntityManager* GetManager() {
+        return Manager;
+    }
     void Start() {
-        for (Entity* entity : GetAllEntities()) {
+        for (auto& it : Manager->GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
-            //entity->Start();
-            TransformComponent* transform = entity->GetComponent<TransformComponent>();
-            CameraComponent* camera = entity->GetComponent<CameraComponent>();
-            LightComponent* light = entity->GetComponent<LightComponent>();
+            for (auto& comp : it.second)
+                comp->Start();
+
+            TransformComponent* transform = Manager->GetComponent<TransformComponent>(it.first);
+            CameraComponent* camera = Manager->GetComponent<CameraComponent>(it.first);
+            LightComponent* light = Manager->GetComponent<LightComponent>(it.first);
             auto& graphic = transform->graphic;
             if (camera && transform) {
-                entity->GetComponent<CameraComponent>()->UBO_ID = graphic->createUBO(sizeof(Cam_Data));
+                Manager->GetComponent<CameraComponent>(it.first)->UBO_ID = graphic->createUBO(sizeof(Cam_Data));
                 graphic->BindBuffer(camera->UBO_ID, 0, 0, sizeof(Cam_Data));
             }
             if (light && transform) {
-                entity->GetComponent<LightComponent>()->UBO_ID = graphic->createUBO(32);
+                Manager->GetComponent<LightComponent>(it.first)->UBO_ID = graphic->createUBO(32);
                 graphic->BindBuffer(light->UBO_ID, 1, 0, 32);
             }
         }
@@ -30,11 +41,14 @@ public:
         glUseProgram(0);      // Unbind shader after loop
     }
     void Update(float dt) {
-        for (Entity* entity : GetAllEntities()) {
+        for (auto& it : Manager->GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
-            TransformComponent* transform = entity->GetComponent<TransformComponent>();
-            CameraComponent* camera = entity->GetComponent<CameraComponent>();
-            LightComponent* light = entity->GetComponent<LightComponent>();
+            for (auto& comp : it.second)
+                comp->Update(dt);
+
+            TransformComponent* transform = Manager->GetComponent<TransformComponent>(it.first);
+            CameraComponent* camera = Manager->GetComponent<CameraComponent>(it.first);
+            LightComponent* light = Manager->GetComponent<LightComponent>(it.first);
             auto& graphic = transform->graphic;
             if (camera && transform) {
                 //Logger::WARN(to_string(camera->cameradata.projection[2].a));
@@ -53,13 +67,11 @@ public:
     }
     void Render() {
         // برای هر موجودیت در دنیای بازی:
-        for (Entity* entity : GetAllEntities()) {
+        for (auto& it : Manager->GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
-            TransformComponent* transform = entity->GetComponent<TransformComponent>();
-            MeshComponent* mesh = entity->GetComponent<MeshComponent>();
-            MaterialComponent* material = entity->GetComponent<MaterialComponent>();
-
-            Obj* Entity = dynamic_cast<Obj*>(entity);
+            TransformComponent* transform = Manager->GetComponent<TransformComponent>(it.first);
+            MeshComponent* mesh = Manager->GetComponent<MeshComponent>(it.first);
+            MaterialComponent* material = Manager->GetComponent<MaterialComponent>(it.first);
 
             if (transform && mesh && material) {
                 mesh->draw();
@@ -69,13 +81,13 @@ public:
         glUseProgram(0);      // Unbind shader after loop
     }
     void Move(float dt) {
-        for (Entity* entity : GetAllEntities()) {
+        for (auto& it : Manager->GetAllEntities()) {
             // چک کن که آیا این موجودیت کامپوننت های مورد نیاز را دارد؟
-            TransformComponent* transform = entity->GetComponent<TransformComponent>();
-            aa* aaa = entity->GetComponent<aa>();
+            TransformComponent* transform = Manager->GetComponent<TransformComponent>(it.first);
+            RigidBodyComponent* Body = Manager->GetComponent<RigidBodyComponent>(it.first);
             auto& graphic = transform->graphic;
             float velocity = 2 * dt;
-            if (transform && aaa) {
+            if (transform && Body) {
                 if (graphic->GetKey(GLFW_KEY_W, GLFW_PRESS)) {
                     transform->position += transform->forward * velocity;// جلو
                 }
@@ -99,24 +111,6 @@ public:
             }
         }
     }
-    Entity* AddEntity(vector<std::shared_ptr<Obj>> Entities) {
-        entities.insert(entities.end(), Entities.begin(), Entities.end());
-        Info(to_string(entities.size()));
-        //return entities.back().get();
-    }
-    Entity* AddEntity(Entity* entity) {
-        entity->id = nextEntityID++;
-        entities.push_back(std::make_shared<Entity>(*entity));
-        return entities.back().get();
-    }
 private:
-    std::vector<std::shared_ptr<Entity>> entities;
-    int nextEntityID = 0;
-    std::vector<Entity*> GetAllEntities() {
-        std::vector<Entity*> result;
-        for (auto& ent_ptr : entities) {
-            result.push_back(ent_ptr.get());
-        }
-        return result;
-    }
+    EntityManager* Manager;
 };

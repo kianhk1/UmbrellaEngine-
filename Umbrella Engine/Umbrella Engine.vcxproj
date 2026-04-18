@@ -100,41 +100,71 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Libraries\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Libraries\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui_tables.cpp" />
+    <ClCompile Include="Libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
     <ClCompile Include="src\Renderer\Data\loadTextures.cpp" />
     <ClCompile Include="Umbrella Engine.cpp" />
     <ClCompile Include="vendor\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Libraries\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="Libraries\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="Libraries\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="Libraries\imgui\imconfig.h" />
+    <ClInclude Include="Libraries\imgui\imgui.h" />
+    <ClInclude Include="Libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="Libraries\imgui\imstb_rectpack.h" />
+    <ClInclude Include="Libraries\imgui\imstb_textedit.h" />
+    <ClInclude Include="Libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
     <ClInclude Include="src\Input\InputManager.h" />
+    <ClInclude Include="src\Physics\API\PhysicsBody.h" />
+    <ClInclude Include="src\Physics\API\PhysicsWorldAPI.h" />
+    <ClInclude Include="src\Physics\BuletAPI\BulletPhysicsBody.h" />
+    <ClInclude Include="src\Physics\BuletAPI\BulletPhysicsWorldAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
     <ClInclude Include="src\Renderer\Data\Data.h" />
@@ -149,6 +179,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FileName.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\BulletCollision.lib" />
+    <Library Include="lib\BulletDynamics.lib" />
+    <Library Include="lib\glfw3.lib" />
+    <Library Include="lib\LinearMath.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

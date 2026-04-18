@@ -1,51 +1,48 @@
 #pragma once
 #include "../API/GraphicsAPI/openglGraphicAPI.h"
 #include "Component.h"
-class Entity
+#include <map>
+#include <unordered_map>
+using Entity = uint32_t;
+class EntityManager
 {
 public:
 	// Name
-	int id = 0;
-	std::string name = "";
-
-	std::vector<Component*> components;
+	static Entity entityId;
 protected:
 	// State
 	//static int count;
+	std::unordered_map<Entity, std::vector<Component*>> entityComponents;
 	bool isVisible = true;
 	bool isActive = true;
 public:
-	Entity() {}
-	~Entity() {
-		for (auto c : components) delete c;
-	}
-
-	virtual void Start() {
-		for (auto& c : components)
-			if (c->isActive)
-				c->Start();
-	}
-
-	virtual void Update(float dt) {
-		if (!isActive) return;
-
-		// بعد Tick بقیه Componentها
-		for (auto c : components) {
-			if (c->isActive) c->Update(dt);
-			//Logger::ERROR("kttryrdrdhyrd");
+	EntityManager() {}
+	~EntityManager() {
+		for (auto& [id, components] : entityComponents) {
+			for (auto* comp : components) {
+				delete comp;  // آزادسازی حافظه
+			}
 		}
+		entityComponents.clear();
+	}
+	Entity AddEntity() {
+		entityComponents[++entityId];
+		return entityId;
 	}
 
-	void AddComponent(Component* comp) {
-		components.push_back(comp);
+	void AddComponent(Component* comp, Entity entity) {
+		entityComponents[entity].push_back(comp);
 	}
 	template<typename T>
-	T* GetComponent() {
-		for (auto c : components) {
+	T* GetComponent(Entity entity) {
+		for (auto c : entityComponents[entity]) {
 			if (T* specificComp = dynamic_cast<T*>(c))
 				return specificComp;
 		}
 		return nullptr;
 	}
+	std::unordered_map<Entity, std::vector<Component*>>& GetAllEntities() {
+		return entityComponents;
+	}
 };
-
+Entity EntityManager::entityId = 0;

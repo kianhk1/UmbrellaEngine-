@@ -1,8 +1,9 @@
 #pragma once
 #include "../API/GraphicsAPI/openglGraphicAPI.h"
-
+#include "../../Physics/BuletAPI/BulletPhysicsWorldAPI.h"
+#include "../../Physics/BuletAPI/BulletPhysicsBody.h"
 enum class ProjectionType
-{
+{ 
 	Perspective,
 	Orthographic
 };
@@ -156,13 +157,15 @@ public:
 		default:
 			break;
 		}
-		glm::vec3 direction;
-		direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-		direction.y = sin(glm::radians(pitch));
-		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-		transform->forward = glm::normalize(direction);
-		transform->right = glm::normalize(glm::cross(transform->forward, transform->up));
-		cameradata.view = glm::lookAt(transform->position, transform->position + transform->forward, transform->up);
+		if(isActive) {
+			glm::vec3 direction;
+			direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+			direction.y = sin(glm::radians(pitch));
+			direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+			transform->forward = glm::normalize(direction);
+			transform->right = glm::normalize(glm::cross(transform->forward, transform->up));
+			cameradata.view = glm::lookAt(transform->position, transform->position + transform->forward, transform->up);
+		}
 	}
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 		static float lastX = 400, lastY = 300;
@@ -321,4 +324,18 @@ private:
 	Texture2DComponent* albedoTexture;
 	Texture2DComponent* normalMap;
 	Texture2DComponent* specularMap;
+};
+enum TypeofObject
+{
+	Static, Kinematic, Dynamic
+};
+class RigidBodyComponent : public Component {
+public:
+	RigidBodyComponent(
+		std::shared_ptr<API::GraphicsAPI> Graphic
+		//std::shared_ptr<Engine::API::Physics::PhysicsWorld> Physic,
+		//float Mass = 1.0f)
+		)
+		: Component(Graphic) {}
+
 };

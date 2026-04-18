@@ -120,7 +120,7 @@ namespace API {
         void DebugTurnOn() { usingdebugoutput = true; }
         void DebugTurnOff() { usingdebugoutput = false; }
 
-        void ShowCursor(void) override { glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); hidecursor = false; }                                      /// Shows cursor
+        void ShowCursor(void) override { glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); hidecursor = false; }                                      /// Shows cursor
         void HideCursor(void) override { glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); hidecursor = true; }                                      /// Hides cursor
         bool IsCursorHidden(void) override { return hidecursor; }                                  /// Check if cursor is not visible
        //void EnableCursor(void)override;                                    /// Enables cursor (unlock cursor)

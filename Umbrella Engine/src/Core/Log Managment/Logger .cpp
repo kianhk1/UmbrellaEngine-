@@ -57,7 +57,7 @@ void Logger::error_callback(GLenum source, GLenum type, GLuint id, GLenum severi
         WARN(msg);
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        INFO(msg);
+        Info(msg);
         break;
     }
 }

@@ -50,14 +50,14 @@ public:
             CameraComponent* camera = Manager->GetComponent<CameraComponent>(it.first);
             LightComponent* light = Manager->GetComponent<LightComponent>(it.first);
             auto& graphic = transform->graphic;
-            if (camera && transform) {
+            if (camera && transform->isActive) {
                 //Logger::WARN(to_string(camera->cameradata.projection[2].a));
                // Cam_Data data{ camera->cameradata.projection,camera->cameradata.view,transform->position };
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(camera->cameradata.projection),0, sizeof(glm::mat4));
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(camera->cameradata.view), sizeof(glm::mat4), sizeof(glm::mat4));
                 graphic->UpdateBuffer(camera->UBO_ID, glm::value_ptr(transform->position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
             }
-            if (light && transform) {
+            if (light && transform->isActive) {
                 graphic->UpdateBuffer(light->UBO_ID, glm::value_ptr(light->light.lightcolor), 0, sizeof(glm::vec4));
                 graphic->UpdateBuffer(light->UBO_ID, glm::value_ptr(transform->position), sizeof(glm::vec4), sizeof(glm::vec4));
             }
@@ -73,7 +73,7 @@ public:
             MeshComponent* mesh = Manager->GetComponent<MeshComponent>(it.first);
             MaterialComponent* material = Manager->GetComponent<MaterialComponent>(it.first);
 
-            if (transform && mesh && material) {
+            if (transform->isActive && mesh && material) {
                 mesh->draw();
             }
         }
@@ -87,7 +87,7 @@ public:
             RigidBodyComponent* Body = Manager->GetComponent<RigidBodyComponent>(it.first);
             auto& graphic = transform->graphic;
             float velocity = 2 * dt;
-            if (transform && Body) {
+            if (transform->isActive && Body) {
                 if (graphic->GetKey(GLFW_KEY_W, GLFW_PRESS)) {
                     transform->position += transform->forward * velocity;// جلو
                 }

@@ -44,5 +44,8 @@ public:
 	std::unordered_map<Entity, std::vector<Component*>>& GetAllEntities() {
 		return entityComponents;
 	}
+	void ClearAllComponent(Entity entity) {
+		entityComponents[entity].clear();
+	}
 };
 Entity EntityManager::entityId = 0;

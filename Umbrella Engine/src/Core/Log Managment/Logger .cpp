@@ -57,7 +57,7 @@ void Logger::error_callback(GLenum source, GLenum type, GLuint id, GLenum severi
         WARN(msg);
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        Info(msg);
+        //INFO(msg);
         break;
     }
 }
@@ -91,17 +91,17 @@ void Logger::Get_Error(InitError stat, int id, string where, const char* FILE) {
         Logger::ERROR(std::string("[Shader Compile Error]") + "[\033[1;34mTYPE=" + TYPE + "\033[0m]" + "[\033[1;34mFILE=" + where + "\033[0m]" + "[\033[1;34mID=" + to_string(id) + "\033[0m]\n" + "Details:\n" + string(LOG));
         break;
     case InitError::error:
-        Logger::ERROR("[\033[1;34mLINE:" + where + "\033[0m]" + "[\033[1;34mFILE:" + FILE + "\033[0m]\n" + "Details:\n" + messages + '\n');
+        Logger::ERROR("[\033[1;34mLINE:" + where + "\033[0m]" + "[\033[1;34mFILE:" + FILE + "\033[0m]\n" + "Details:\n" + messages );
         break;
     }
 }
 void Logger::log(LogLevel level, string masseage) {
     string log_level = levelToString(level);
     string timest = currentTime();
-    cout << "[" << log_level << "][" << timest << "]" << masseage;
+    cout << "[" << log_level << "][" << timest << "]" << masseage << std::endl;
 
     if (level == LogLevel::FATAL) {
-        std::cerr << masseage << "\nFatal error encountered. Exiting program.\n";
+        std::cerr << masseage << "\nFatal error encountered. Exiting program." << std::endl;
         exit(EXIT_FAILURE);
     }
 }

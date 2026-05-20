@@ -25,18 +25,9 @@ int main() {
 	UE->SetWindowIcon("Assets/Umbrella.png");
 	UE->HideCursor();
 
-	// 1. ایجاد context ImGui
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // فعال کردن کنترل با کیبورد (اختیاری)
-
-	// 2. تنظیم استایل (اختیاری)
-	ImGui::StyleColorsDark();  // یا ImGui::StyleColorsLight()
-
-	// 3. مقداردهی اولیه GLFW و OpenGL backendها
-	ImGui_ImplGlfw_InitForOpenGL(UE->getwindow(), true);  // true = نصب خودکار callbackها
-	ImGui_ImplOpenGL3_Init("#version 430");
-
+	ImGui::StyleColorsDark();
 
 
 	/*Entity* v = new obj(UE, "Assets/as.jpg", "Assets/ns.png", "Assets/bs.png");
@@ -44,12 +35,10 @@ int main() {
 	v->Start();*/
 
 	object_load* v = new object_load(_system.GetManager(), UE, "Assets/backpack.obj");
-	//_system.AddEntity(v);
+	//_system.AddEntity(v); 
 	v->Start();
 
-	Objbase* sum = new Objbase(_system.GetManager(), UE);
-	Component* s_trans = new TransformComponent(UE);
-	sum->AddComponent(s_trans);
+	ObjBase* sum = new ObjBase(_system.GetManager(), UE);
 	Component* s_light = new LightComponent(UE, glm::vec3(1.0f, 1.0f, 1.0f));
 	sum->AddComponent(s_light);
 	sum->GetComponent<TransformComponent>()->position = glm::vec3(3.0, 2.0, 3.0);
@@ -64,6 +53,9 @@ int main() {
 
 	glfwSetWindowUserPointer(UE->getwindow(), &cam);
 	glfwSetCursorPosCallback(UE->getwindow(), CameraComponent::mouse_callback);
+
+	ImGui_ImplGlfw_InitForOpenGL(UE->getwindow(), true);
+	ImGui_ImplOpenGL3_Init("#version 430");
 
 	glEnable(GL_DEPTH_TEST);
 	float deltaTime = 0.0f;
@@ -91,12 +83,12 @@ int main() {
 		bool isPressed = UE->GetKey(GLFW_KEY_R, GLFW_PRESS);
 		if (isPressed && !wasPressed) {
 			if (edittmode) {
-				//cam->GetComponent<CameraComponent>()->firstMouse = true;
-				//cam->GetComponent<CameraComponent>()->isActive = false;
+				cam->GetComponent<CameraComponent>()->ismoving = false;
+				cam->GetComponent<CameraComponent>()->firstMouse = true;
 				UE->ShowCursor();
-			
 			}
 			else {
+				cam->GetComponent<CameraComponent>()->ismoving = true;
 				cam->GetComponent<CameraComponent>()->isActive = true;
 				UE->HideCursor();
 			}
@@ -106,13 +98,52 @@ int main() {
 		wasPressed = isPressed;
 
 		_system.Update(deltaTime);
-
-		ImGui::Begin("Debug Panel", nullptr, ImGuiWindowFlags_NoScrollbar);
+		static Component* selectedComponent = nullptr;
+		ImGui::Begin("Debug Panel");
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::Text("Position: %.2f, %.2f, %.2f",
 			cam->GetComponent<TransformComponent>()->position.x,
 			cam->GetComponent<TransformComponent>()->position.y,
 			cam->GetComponent<TransformComponent>()->position.z);
+
+		for (auto& entity : _system.GetManager()->GetAllEntities())
+		{
+			ImGui::PushID(entity.first);
+
+			if (ImGui::TreeNode((to_string(entity.first)).c_str()))
+			{
+				for (auto& comp : entity.second)
+				{
+					ImGui::PushID(comp);
+
+					if (ImGui::TreeNode(comp->name.c_str()))
+					{
+						if (TransformComponent* trans = dynamic_cast<TransformComponent*>(comp))
+						{
+							ImGui::InputFloat3("Position", &trans->position.x);
+
+							glm::vec3 euler = glm::degrees(trans->rotation);
+							if (ImGui::InputFloat3("Rotation", &euler.x)) {
+								trans->rotation = glm::radians(euler);
+							}
+
+							ImGui::InputFloat3("Scale", &trans->scale.x);
+						}
+						if (LightComponent* light = dynamic_cast<LightComponent*>(comp))
+						{
+							ImGui::ColorPicker3("Color", glm::value_ptr(light->light.lightcolor));
+						}
+
+						ImGui::TreePop();
+					}
+
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+
+			ImGui::PopID();
+		}
 		ImGui::End();
 
 		ImGui::Render();

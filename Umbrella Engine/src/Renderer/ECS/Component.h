@@ -2,6 +2,10 @@
 #include "../API/GraphicsAPI/openglGraphicAPI.h"
 #include "../../Physics/BuletAPI/BulletPhysicsWorldAPI.h"
 #include "../../Physics/BuletAPI/BulletPhysicsBody.h"
+#include "Libraries/imgui/imgui.h"
+#include "Libraries/imgui/backends/imgui_impl_glfw.h"
+#include "Libraries/imgui/backends/imgui_impl_opengl3.h"
+
 enum class ProjectionType
 { 
 	Perspective,
@@ -17,6 +21,7 @@ public:
 	virtual void Start() {}
 	virtual void Update(float dt) {}
 	std::shared_ptr<API::GraphicsAPI> graphic;
+	std::string name = "Component";
 };
 
 class ShaderComponent : public Component {
@@ -27,20 +32,22 @@ public:
 		const std::string& path_Fragment_Shader) 
 		: Component(Graphic){
 		shaderdata = graphic->createShader(path_Vertex_Shader, path_Fragment_Shader);
+		name = "ShaderComponent";
 	}
 	void use() {
 		graphic->useShader(shaderdata);
 	}
 	DATA::ShaderData shaderdata;
+	
 };
 class TransformComponent : public Component {
 public:
-	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic, DATA::ShaderData Shader) : Component(Graphic), shader(Shader) {}
-	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic) : Component(Graphic) {}
+	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic, DATA::ShaderData Shader) : Component(Graphic), shader(Shader) { name = "TransformComponent"; }
+	TransformComponent(std::shared_ptr<API::GraphicsAPI> Graphic) : Component(Graphic) { name = "TransformComponent"; }
 	// Transform
 	DATA::ShaderData shader;
 	glm::vec3 position = glm::vec3(0.0f);
-	glm::quat rotation = glm::vec3(0.0f);
+	glm::vec3 rotation = glm::vec3(0.0f);
 	glm::vec3 scale = glm::vec3(1.0f);
 
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -53,7 +60,9 @@ public:
 	void updateTransform() {
 		glm::mat4 localMatrix =
 			glm::translate(glm::mat4(1.0f), position) *
-			glm::mat4_cast(rotation) *
+			glm::rotate(glm::mat4(1.0f), rotation.x, glm::vec3(1, 0, 0)) * // Pitch
+			glm::rotate(glm::mat4(1.0f), rotation.y, glm::vec3(0, 1, 0)) * // Yaw
+			glm::rotate(glm::mat4(1.0f), rotation.z, glm::vec3(0, 0, 1)) * // Roll
 			glm::scale(glm::mat4(1.0f), scale);
 		if (parent) modelMatrix = parent->modelMatrix * localMatrix;
 		else modelMatrix = localMatrix;
@@ -91,6 +100,7 @@ public:
 		DATA::ShaderData Shader)
 		: Component(Graphic), shader(Shader) {
 		meshdata = graphic->createMesh(vertices, indices);
+		name = "MeshComponent";
 	}
 	void setAttrib(int a, int b, int c, int d) {
 		graphic->setAttrib(meshdata, a, b, c, d);
@@ -105,7 +115,7 @@ public:
 		graphic->useShader(shader);
 		graphic->drawMesh(meshdata);
 	}
-	std::string name = "";
+	//std::string name = "";
 	DATA::ShaderData shader;
 	DATA::MeshData* meshdata;
 };
@@ -117,6 +127,7 @@ public:
 		DATA::ShaderData Shader)
 		: Component(Graphic), t_data(T_data), shader(Shader) {
 		graphic->Load2DTexture(t_data);
+		name = "Texture2DComponent";
 	}
 	void set_texture(const char* name) {
 		graphic->useShader(shader);
@@ -143,6 +154,7 @@ public:
 		TransformComponent* Transform)
 		: Component(Graphic), type(Type), transform(Transform) {
 		cameradata.AspectRatio = AspectRatio;
+		name = "CameraComponent";
 	}
 	void Update(float dt) override {
 		//if (transform) Warn("jyvjgghjhvjgh\n");
@@ -157,17 +169,20 @@ public:
 		default:
 			break;
 		}
-		if(isActive) {
+		if(ismoving) {
 			glm::vec3 direction;
 			direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 			direction.y = sin(glm::radians(pitch));
 			direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
 			transform->forward = glm::normalize(direction);
 			transform->right = glm::normalize(glm::cross(transform->forward, transform->up));
+
 			cameradata.view = glm::lookAt(transform->position, transform->position + transform->forward, transform->up);
 		}
 	}
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+
 		static float lastX = 400, lastY = 300;
 
 		CameraComponent* cam = static_cast<CameraComponent*>(glfwGetWindowUserPointer(window));
@@ -198,6 +213,7 @@ public:
 	float sensitivity = 0.1f;
 	static float yaw, pitch;
 	static bool firstMouse;
+	bool ismoving = true;
 };
 float CameraComponent::yaw, CameraComponent::pitch;
 bool CameraComponent::firstMouse = true;
@@ -205,7 +221,9 @@ class aa : public Component {
 public:
 	aa(
 		std::shared_ptr<API::GraphicsAPI> Graphic)
-		: Component(Graphic) {}
+		: Component(Graphic) {
+		name = "aa";
+	}
 };
 class LightComponent : public Component {
 public:
@@ -214,6 +232,7 @@ public:
 		glm::vec3 lightcolor)
 		: Component(Graphic) {
 		light.lightcolor = lightcolor;
+		name = "LightComponent";
 	}
 	int UBO_ID;
 	DATA::LightData light;
@@ -241,11 +260,13 @@ public:
 		albedoTexture = new Texture2DComponent(graphic, &material.albedoTexturedata, shader->shaderdata);
 		normalMap = new Texture2DComponent(graphic, &material.normalMapdata, shader->shaderdata);
 		specularMap = new Texture2DComponent(graphic, &material.specularMapdata, shader->shaderdata);
+		name = "MaterialComponent";
 	}
 	// تنظیم رنگ پایه
-	#define color(r,g,b,a) glm::vec4(r,g,b,a)
+	#define color4(r,g,b,a) glm::vec4(r,g,b,a)
+	#define color3(r,g,b) glm::vec3(r,g,b)
 	void setBaseColor(float r, float g, float b, float a = 1.0f) {
-		material.baseColor = color(r, g, b, a);
+		material.baseColor = color4(r, g, b, a);
 	}
 	void setBaseColor(const glm::vec4& color) {
 			material.baseColor = color;
@@ -268,7 +289,7 @@ public:
 
 	// تنظیم رنگ بازتاب (Specular Color)
 	void setSpecularColor(float r, float g, float b) {
-		material.specularColor = color(r, g, b, 1.0f);
+		material.specularColor = color3(r, g, b, 1.0f);
 	}
 
 	// تنظیم میزان درخشندگی (Shininess)
@@ -336,6 +357,8 @@ public:
 		//std::shared_ptr<Engine::API::Physics::PhysicsWorld> Physic,
 		//float Mass = 1.0f)
 		)
-		: Component(Graphic) {}
+		: Component(Graphic) {
+		name = "RigidBodyComponent";
+	}
 
 };

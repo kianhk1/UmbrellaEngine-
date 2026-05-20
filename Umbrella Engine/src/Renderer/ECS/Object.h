@@ -4,10 +4,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-class Objbase
+class ObjBase
 {
 public:
-	Objbase(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic) : Manager(manager) {
+	ObjBase(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic) : Manager(manager) {
 		entity = Manager->AddEntity();
 		Component* transform = new TransformComponent(Graphic);
 		Manager->AddComponent(transform, entity);
@@ -22,16 +22,17 @@ public:
 		}
 		return nullptr;
 	}
-private:
+	virtual void Start() {}
+protected:
 	EntityManager* Manager;
 	Entity entity;
 };
 
-class objcube
+class ObjCube : public ObjBase
 {
 public:
-	objcube(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& t_a, const std::string& t_n, const std::string& t_s) : Manager(manager){
-		entity = Manager->AddEntity();
+	ObjCube(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& t_a, const std::string& t_n, const std::string& t_s) : ObjBase(manager, Graphic) {
+		Manager->ClearAllComponent(entity);
 		Component* material = new MaterialComponent(Graphic, t_a, t_n, t_s, "Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
 		Manager->AddComponent(material, entity);
 		Component* mesh = new MeshComponent(Graphic, vertex, index, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
@@ -39,7 +40,7 @@ public:
 		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
 		Manager->AddComponent(transform, entity);
 	}
-	void Start() {
+	void Start() override {
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
@@ -57,8 +58,6 @@ public:
 		return nullptr;
 	}
 private:
-	EntityManager* Manager;
-	Entity entity;
 	std::vector<float> vertex = {
 		//  x,    y,    z,        r,   g,   b,      u,  v,       nx,    ny,    nz,      tx,    ty,    tz
 		// جلو (Front) - تانژانت در راستای X
@@ -106,33 +105,22 @@ private:
 	   20,21,22,22,23,20        // پایین
 	};
 };
-class Camera
+class Camera : public ObjBase
 {
 public:
 	Camera(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic,
 		ProjectionType Type,
-		float AspectRatio) : Manager(manager) {
-		entity = Manager->AddEntity();
+		float AspectRatio) : ObjBase(manager, Graphic) {
+		Manager->ClearAllComponent(entity);
 		Component* c_trans = new TransformComponent(Graphic);
 		Manager->AddComponent(c_trans, entity);
 		Component* c_cam = new CameraComponent(Graphic, Type, AspectRatio, Manager->GetComponent<TransformComponent>(entity));
 		Manager->AddComponent(c_cam, entity);
 	}
-	void AddComponent(Component* comp) {
-		Manager->AddComponent(comp, entity);
-	}
-	template<typename T>
-	T* GetComponent() {
-		if (Manager) {
-			return Manager->GetComponent<T>(entity);
-		}
-		return nullptr;
-	}
 private:
-	EntityManager* Manager;
-	Entity entity;
+
 };
-class object_load
+class object_load : public ObjBase
 {
 public:
 	// نگه داشتن اینپورتور به صورت فیلد کلاس برای جلوگیری از حذف داده‌های scene
@@ -142,7 +130,7 @@ public:
 	vector<unsigned int> indices;
 	string DIFFUSE, SPECULAR, NORMALS;
 
-	object_load(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : Manager(manager) {
+	object_load(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : ObjBase(manager, Graphic) {
 		// فلگ‌های بهینه شده
 		scene = importer.ReadFile(mpdle_path,
 			aiProcess_Triangulate |
@@ -157,7 +145,7 @@ public:
 		}
 		load_model(scene->mRootNode, scene);
 		Info("load model " + scene->mName.C_Str() + "successfully: " + mpdle_path + '\n');
-		entity = Manager->AddEntity();
+		Manager->ClearAllComponent(entity);
 		Component* material = new MaterialComponent(Graphic, DIFFUSE, NORMALS, SPECULAR, "Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
 		Manager->AddComponent(material, entity);
 		Component* mesh = new MeshComponent(Graphic, vertices, indices, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
@@ -165,22 +153,12 @@ public:
 		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
 		Manager->AddComponent(transform, entity);
 	}
-	void Start() {
+	void Start() override {
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(3, 3, 14, 8);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(4, 3, 14, 11);
-	}
-	void AddComponent(Component* comp) {
-		Manager->AddComponent(comp, entity);
-	}
-	template<typename T>
-	T* GetComponent() {
-		if (Manager) {
-			return Manager->GetComponent<T>(entity);
-		}
-		return nullptr;
 	}
 private:
 	void load_mesh(aiMesh* mesh, const aiScene* scene) {
@@ -270,44 +248,31 @@ private:
 			load_model(node->mChildren[i], scene);
 		}
 	}
-
-	EntityManager* Manager;
-	Entity entity;
 };
 
 
-class Obj
+class Obj : public ObjBase
 {
 public:
 	Obj(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, std::vector<float>& vertices,
-		std::vector<unsigned int>& indices, Component* material) {
-		entity = Manager->AddEntity();
+		std::vector<unsigned int>& indices, Component* material) : ObjBase(manager, Graphic) {
+		Manager->ClearAllComponent(entity);
 		Manager->AddComponent(material, entity);
 		Component* mesh = new MeshComponent(Graphic, vertices, indices, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
 		Manager->AddComponent(mesh, entity);
 		Component* transform = new TransformComponent(Graphic, Manager->GetComponent<MaterialComponent>(entity)->shader->shaderdata);
 		Manager->AddComponent(transform, entity);
 	}
-	void Start() {
+	void Start() override {
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(0, 3, 14, 0);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(1, 3, 14, 3);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(2, 2, 14, 6);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(3, 3, 14, 8);
 		Manager->GetComponent<MeshComponent>(entity)->setAttrib(4, 3, 14, 11);
 	}
-	void AddComponent(Component* comp) {
-		Manager->AddComponent(comp, entity);
-	}
-	template<typename T>
-	T* GetComponent() {
-		if (Manager) {
-			return Manager->GetComponent<T>(entity);
-		}
-		return nullptr;
-	}
+
 private:
-	EntityManager* Manager;
-	Entity entity;
+
 };
 struct Node
 {
@@ -324,7 +289,7 @@ struct Node
 		objects.push_back(obj);
 	}
 };
-class objectload
+class objectload : public ObjBase
 {
 public:
 	// نگه داشتن اینپورتور به صورت فیلد کلاس برای جلوگیری از حذف داده‌های scene
@@ -334,7 +299,7 @@ public:
 	std::unique_ptr<Node> rootNode;
 	MaterialComponent* material;
 
-	objectload(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : Manager(manager) {
+	objectload(EntityManager* manager, std::shared_ptr<API::GraphicsAPI> Graphic, const std::string& mpdle_path) : ObjBase(manager, Graphic) {
 		// فلگ‌های بهینه شده
 		scene = importer.ReadFile(mpdle_path,
 			aiProcess_Triangulate |
@@ -347,6 +312,7 @@ public:
 			Logger::ERROR(importer.GetErrorString());
 			return;
 		}
+		Manager->ClearAllComponent(entity);
 		rootNode = std::make_unique<Node>();
 		aiMaterial* aimaterial = scene->mMaterials[scene->mMeshes[0]->mMaterialIndex];
 		processMaterial(aimaterial);
@@ -359,20 +325,9 @@ public:
 	vector<std::shared_ptr<Obj>>& getEntities() {
 		return objects;
 	}
-	void Start() {
+	void Start() override {
 		for (auto& entity : objects)
 			entity->Start();
-	}
-	void AddComponent(Component* comp) {
-		for (auto& obj : objects)
-			obj->AddComponent(comp);
-	}
-	template<typename T>
-	T* GetComponent() {
-		if (Manager) {
-			return objects[0]->GetComponent<T>();
-		}
-		return nullptr;
 	}
 private:
 
@@ -477,6 +432,4 @@ private:
 		}
 	}
 	vector<std::shared_ptr<Obj>> objects;
-	EntityManager* Manager;
-	Entity entity;
 };

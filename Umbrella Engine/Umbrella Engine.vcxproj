@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -146,6 +146,7 @@
     <ClCompile Include="Libraries\imgui\imgui_draw.cpp" />
     <ClCompile Include="Libraries\imgui\imgui_tables.cpp" />
     <ClCompile Include="Libraries\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="NewFolder1\FileName.cpp" />
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
     <ClCompile Include="src\Renderer\Data\loadTextures.cpp" />
     <ClCompile Include="Umbrella Engine.cpp" />
@@ -528,13 +529,14 @@
     <ClInclude Include="src\Physics\BuletAPI\BulletPhysicsWorldAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
+    <ClInclude Include="src\Renderer\API\InputAPI\InputAPI.h" />
+    <ClInclude Include="src\Renderer\API\WindowAPI\openglWindowAPI.h" />
+    <ClInclude Include="src\Renderer\API\WindowAPI\WindowAPI.h" />
     <ClInclude Include="src\Renderer\Data\Data.h" />
     <ClInclude Include="src\Renderer\Data\loadTextures.h" />
     <ClInclude Include="src\Renderer\Data\MaterialData.h" />
     <ClInclude Include="src\Renderer\ECS\Component.h" />
     <ClInclude Include="src\Renderer\ECS\Entity.h" />
-    <ClInclude Include="src\Renderer\ECS\Object.h" />
-    <ClInclude Include="src\Renderer\ECS\RenderQueue.h" />
     <ClInclude Include="src\Renderer\ECS\System.h" />
     <ClInclude Include="Umbrella Engine.h" />
   </ItemGroup>

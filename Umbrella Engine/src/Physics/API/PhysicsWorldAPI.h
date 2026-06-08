@@ -1,15 +1,15 @@
 #pragma once
 #include <memory>
 #include <glm/vec3.hpp> // فرض بر استفاده از glm در موتور شما
-
+namespace DATA {
+    struct WorldConfig {
+        glm::vec3 gravity = glm::vec3(0, -9.81f, 0);
+        float fixedTimeStep = 1.0f / 60.0f;
+        int maxSubSteps = 4;
+    };
+}
 namespace Engine {
-    namespace DATA {
-        struct WorldConfig {
-            glm::vec3 gravity = glm::vec3(0, -9.81f, 0);
-            float fixedTimeStep = 1.0f / 60.0f;
-            int maxSubSteps = 4;
-        };
-    }
+    
     namespace API {
         namespace Physics {
 

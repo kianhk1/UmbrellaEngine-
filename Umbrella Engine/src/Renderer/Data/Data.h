@@ -8,6 +8,10 @@
 
 namespace DATA {
 
+    struct LightData {
+        glm::vec3 lightcolor = glm::vec3(1.0f);
+    };
+
     struct CameraData {
         glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::mat4 projection;
@@ -22,7 +26,9 @@ namespace DATA {
     };
 
     struct ShaderData {
-        unsigned int programID = 0;
+        unsigned int programID = -1;
+        std::string path_Vertex_Shader;
+        std::string path_Fragment_Shader;
     };
 
     struct MeshData {
@@ -30,15 +36,14 @@ namespace DATA {
         unsigned int vboID = 0;
         unsigned int iboID = 0;
         int indexCount = 0;
+        std::vector<float> vertices;
+        std::vector<unsigned int> indices;
     };
 
     struct Texture2DData
     {
         std::string t_path;
         unsigned int t_id;
-        Texture2DData() {
-            //t_id++;
-        }
         int t_unit;
         int width;
         int height;

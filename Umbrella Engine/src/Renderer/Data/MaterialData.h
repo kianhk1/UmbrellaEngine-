@@ -8,9 +8,7 @@
 // برای سادگی، اینجا از std::string استفاده می‌کنیم.
 // اگر کلاس Texture دارید، می‌تونید به جای string از std::shared_ptr<Texture> استفاده کنید.
 namespace DATA {
-    struct LightData {
-        glm::vec3 lightcolor = glm::vec3(1.0f);
-    };
+    
     struct MaterialData {
         // داده‌های رنگی معمولا با 4 مولفه (RGBA) نمایش داده می‌شوند
         glm::vec4 baseColor; // RGBA, مقادیر بین 0.0 تا 1.0

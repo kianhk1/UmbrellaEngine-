@@ -1,5 +1,7 @@
-#pragma once
-#include "../API/GraphicsAPI/openglGraphicAPI.h"
+﻿#pragma once
+#include "../API/GraphicsAPI/GraphicsAPI.h"
+#include "../../Input & Output Manager/Input System/InputSystem.h"
+#include "../Loader/AssetManager.h"
 #include "Entity.h"
 class SystemManager {
 public:
@@ -8,64 +10,171 @@ public:
 
 class System {
 public:
-	System(std::shared_ptr<Engine::API::GraphicsAPI> graphic) : Graphic(graphic) {}
+	~System() = default;
 	virtual void Start() = 0;
 	virtual void Update(float dt) = 0;
-	std::shared_ptr<Engine::API::GraphicsAPI> Graphic;
 };
 
 class RenderSystem : public System {
 public:
-	RenderSystem(std::shared_ptr<Engine::API::GraphicsAPI> graphic) : System(graphic) {}
 	void Start() override {
-		auto view = registry.view<TransformComponent, MeshComponent, ShaderComponent>();
+		auto view = registry.view<TransformComponent, MeshComponent, MatrialComponent>();
 		
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,
 				MeshComponent& mesh,
-				ShaderComponent& shader){
-					// init shader
-					shader.shader.programID = Graphic->createShader(); 
-					unsigned int vs = Graphic->compileShader(GL_VERTEX_SHADER, Read_File(shader.shader.path_Vertex_Shader.c_str())); 
-					unsigned int fs = Graphic->compileShader(GL_FRAGMENT_SHADER, Read_File(shader.shader.path_Fragment_Shader.c_str())); 
-					Graphic->linkShaderProgram(shader.shader.programID, vs, fs); 
-					Graphic->useShader(shader.shader);
+				MatrialComponent matrial){
 					// init mesh
-					mesh.meshdata = Graphic->createMesh(mesh.meshdata.vertices, mesh.meshdata.indices);  
-					Graphic->setAttrib(mesh.meshdata, 0, 3, 14, 0);
-					Graphic->setAttrib(mesh.meshdata, 1, 3, 14, 3); 
-					Graphic->setAttrib(mesh.meshdata, 2, 2, 14, 6); 
-					Graphic->setAttrib(mesh.meshdata, 3, 3, 14, 8); 
-					Graphic->setAttrib(mesh.meshdata, 4, 3, 14, 11); 
+					mesh.meshdata = Engine::API::createMesh(mesh.meshdata.vertices, mesh.meshdata.indices);
+					Engine::API::setAttrib(mesh.meshdata, 0, 3, 14, 0);
+					Engine::API::setAttrib(mesh.meshdata, 1, 3, 14, 3);
+					Engine::API::setAttrib(mesh.meshdata, 2, 2, 14, 6);
+					Engine::API::setAttrib(mesh.meshdata, 3, 3, 14, 8);
+					Engine::API::setAttrib(mesh.meshdata, 4, 3, 14, 11);
+					updateTransform(transform);
+					
+					Engine::API::SetUniform(Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader)->programID,
+						Engine::AssetManager::GetInstance().GetTexture(matrial.matrialdata.textures[0])->unit, "albedoTexture");
 			});
 	}
 	void Update(float dt) override {
-		auto view = registry.view<TransformComponent, MeshComponent, ShaderComponent>();
+		auto view = registry.view<TransformComponent, MeshComponent, MatrialComponent>();
 
 		view.each( 
 			[this](auto entity,
 				TransformComponent& transform, 
 				MeshComponent& mesh, 
-				ShaderComponent& shader) {
-				Graphic->useShader(shader.shader); 
-				Graphic->drawMesh(mesh.meshdata);
+				MatrialComponent matrial) {
+					Engine::API::useShader(*Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader));
+					Engine::API::SetUniform(Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader)->programID, transform.modelMatrix, "model");
+					Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(matrial.matrialdata.textures[0]));
+					Engine::API::drawMesh(mesh.meshdata, matrial.matrialdata.state);
 			});
 	}
 private:
-	string Read_File(const char* path) {
-		ifstream file(path);
-		stringstream buf;
-		buf << file.rdbuf();
-		string content = buf.str();
-		if (content.size() >= 3 &&
-			(unsigned char)content[0] == 0xEF &&
-			(unsigned char)content[1] == 0xBB &&
-			(unsigned char)content[2] == 0xBF) {
-			content = content.substr(3);
-		}
-		if (content.empty())
-			Logger::ERROR("files are empty!");
-		return content;
+	void updateTransform(TransformComponent& transform) {
+		glm::mat4 localMatrix =
+			glm::translate(glm::mat4(1.0f), transform.position) *
+			glm::rotate(glm::mat4(1.0f), transform.rotation.x, glm::vec3(1, 0, 0)) * // Pitch
+			glm::rotate(glm::mat4(1.0f), transform.rotation.y, glm::vec3(0, 1, 0)) * // Yaw
+			glm::rotate(glm::mat4(1.0f), transform.rotation.z, glm::vec3(0, 0, 1)) * // Roll
+			glm::scale(glm::mat4(1.0f), transform.scale);
+		if (transform.parent) transform.modelMatrix = transform.parent->modelMatrix * localMatrix;
+		else transform.modelMatrix = localMatrix;
+
+		//forward = glm::vec3(modelMatrix[2]); // محور Z جهانی شده
+		//up = glm::vec3(modelMatrix[1]); // محور Y جهانی شده
+		//right = glm::vec3(modelMatrix[0]);
+		transform.right = glm::normalize(glm::cross(transform.forward, transform.up));
+		/*Logger::WARN("x:" + to_string(right.x) + "\n");
+		Logger::WARN("y:" + to_string(right.y) + "\n");
+		Logger::WARN("z:" + to_string(right.z) + "\n");*/
+
 	}
 };
+
+class CameraSystem : public System {
+public:
+	CameraSystem(std::shared_ptr<Engine::DATA::windowData> window) : Window(window) {}
+	void Start() override {
+		auto view = registry.view<TransformComponent, CameraComponent>();
+		
+		view.each(
+			[this](auto entity,
+				TransformComponent& transform,
+				CameraComponent& cam) {
+					cam.UBO_ID = Engine::API::createUBO(144);//projection + view + position
+					Engine::API::BindBuffer(cam.UBO_ID, 0, 0, 144);
+					cam.cameradata.windowHeight = Window->display.height;
+					cam.cameradata.windowWidth = Window->display.width;
+					cam.cameradata.AspectRatio = cam.cameradata.windowWidth / cam.cameradata.windowHeight;
+					switch (cam.type)
+					{
+					case ProjectionType::Perspective:
+						cam.cameradata.projection = glm::perspective(glm::radians(cam.cameradata.fov), 
+																	cam.cameradata.AspectRatio, cam.cameradata.NCP, cam.cameradata.FCP);
+						break;
+					case ProjectionType::Orthographic:
+						cam.cameradata.projection = glm::ortho(0.0f, cam.cameradata.windowWidth, 
+																0.0f, cam.cameradata.windowHeight, -1.0f, 1.0f);
+						break;
+					default:
+						break;
+					}
+			});
+	}
+	void Update(float dt) override {
+		auto view = registry.view<TransformComponent, CameraComponent>();
+		
+		view.each(
+			[this](auto entity,
+				TransformComponent& transform,
+				CameraComponent& cam) {
+					if (cam.ismoving) {
+						Engine::Event::EventManager::GetInstance().Subscribe("windowresize", [&](void* d) {
+							auto* size = static_cast<Engine::DATA::Size*>(d);
+							cam.cameradata.AspectRatio = static_cast<float>(size->width) / size->height;
+							std::cout << "aa:" << cam.cameradata.AspectRatio << '\n';
+							switch (cam.type)
+							{
+							case ProjectionType::Perspective:
+								cam.cameradata.projection = glm::perspective(glm::radians(cam.cameradata.fov), 
+																			cam.cameradata.AspectRatio, cam.cameradata.NCP, cam.cameradata.FCP);
+								break;
+							case ProjectionType::Orthographic:
+								cam.cameradata.projection = glm::ortho(0.0f, static_cast<float>(size->width), 
+																		0.0f, static_cast<float>(size->height), -1.0f, 1.0f);
+								break;
+							default:
+								break;
+							}
+							});
+						
+
+						UpdateCameraRotation(cam, Window);
+
+						glm::vec3 direction;
+						direction.x = cos(glm::radians(cam.yaw)) * cos(glm::radians(cam.pitch));
+						direction.y = sin(glm::radians(cam.pitch));
+						direction.z = sin(glm::radians(cam.yaw)) * cos(glm::radians(cam.pitch));
+
+						transform.forward = glm::normalize(direction);
+						transform.right = glm::normalize(glm::cross(transform.forward, transform.up)); 
+
+						cam.cameradata.view = glm::lookAt(transform.position, transform.position + transform.forward, transform.up);
+
+						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(cam.cameradata.projection), 0, sizeof(glm::mat4));
+						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(cam.cameradata.view), sizeof(glm::mat4), sizeof(glm::mat4));
+						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(transform.position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
+					}
+			});
+	}
+private:
+	std::shared_ptr<Engine::DATA::windowData> Window;
+	void UpdateCameraRotation(CameraComponent& cam, std::shared_ptr<Engine::DATA::windowData> window) {
+
+		static float lastX = window->display.width/2, lastY = window->display.height / 2;
+
+		if (cam.firstMouse)
+		{
+			lastX = window->mousepos.x;
+			lastY = window->mousepos.y;
+			cam.firstMouse = false;
+		}
+		float xoffset = window->mousepos.x - lastX;
+		float yoffset = lastY - window->mousepos.y;
+		lastX = window->mousepos.x;
+		lastY = window->mousepos.y;
+		float sensitivity = 0.1f;
+		xoffset *= sensitivity;
+		yoffset *= sensitivity;
+		cam.yaw += xoffset;
+		cam.pitch += yoffset;
+		if (cam.pitch > 89.0f)
+			cam.pitch = 89.0f;
+		if (cam.pitch < -89.0f)
+			cam.pitch = -89.0f;
+	}
+};
+

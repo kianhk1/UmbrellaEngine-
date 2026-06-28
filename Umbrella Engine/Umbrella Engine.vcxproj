@@ -44,6 +44,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -148,7 +149,9 @@
     <ClCompile Include="Libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="NewFolder1\FileName.cpp" />
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
-    <ClCompile Include="src\Renderer\Data\loadTextures.cpp" />
+    <ClCompile Include="src\Input &amp; Output Manager\Input System\openglInput.cpp" />
+    <ClCompile Include="src\Renderer\Loader\ShaderLoader.cpp" />
+    <ClCompile Include="src\Renderer\Loader\TextureLoader.cpp" />
     <ClCompile Include="Umbrella Engine.cpp" />
     <ClCompile Include="vendor\Source.cpp" />
   </ItemGroup>
@@ -521,23 +524,35 @@
     <ClInclude Include="Libraries\physx\vehicle2\wheel\PxVehicleWheelHelpers.h" />
     <ClInclude Include="Libraries\physx\vehicle2\wheel\PxVehicleWheelParams.h" />
     <ClInclude Include="Libraries\physx\vehicle2\wheel\PxVehicleWheelStates.h" />
+    <ClInclude Include="src\AssetManager\AssetManager.h" />
+    <ClInclude Include="src\Core\Data\Data.h" />
+    <ClInclude Include="src\Core\FileSystem\FileSystem.h" />
+    <ClInclude Include="src\Core\Hash\HashMaker.h" />
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
+    <ClInclude Include="src\Core\Memory Management\Memory Management.h" />
+    <ClInclude Include="src\Event Manager\EventManager.h" />
+    <ClInclude Include="src\Input &amp; Output Manager\Input &amp; Output File\FileSystem.h" />
+    <ClInclude Include="src\Input &amp; Output Manager\Input &amp; Output File\ReadFile.h" />
+    <ClInclude Include="src\Input &amp; Output Manager\Input System\InputSystem.h" />
+    <ClInclude Include="src\Input\Event Manager\EventManager.h" />
     <ClInclude Include="src\Input\InputManager.h" />
     <ClInclude Include="src\Physics\API\PhysicsBody.h" />
     <ClInclude Include="src\Physics\API\PhysicsWorldAPI.h" />
     <ClInclude Include="src\Physics\BuletAPI\BulletPhysicsBody.h" />
     <ClInclude Include="src\Physics\BuletAPI\BulletPhysicsWorldAPI.h" />
     <ClInclude Include="src\Renderer\API\GraphicsAPI\GraphicsAPI.h" />
-    <ClInclude Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.h" />
-    <ClInclude Include="src\Renderer\API\InputAPI\InputAPI.h" />
-    <ClInclude Include="src\Renderer\API\WindowAPI\openglWindowAPI.h" />
+    <ClCompile Include="src\Renderer\API\GraphicsAPI\openglGraphicAPI.cpp" />
+    <ClCompile Include="src\Renderer\API\WindowAPI\openglWindowAPI.cpp" />
     <ClInclude Include="src\Renderer\API\WindowAPI\WindowAPI.h" />
     <ClInclude Include="src\Renderer\Data\Data.h" />
-    <ClInclude Include="src\Renderer\Data\loadTextures.h" />
-    <ClInclude Include="src\Renderer\Data\MaterialData.h" />
     <ClInclude Include="src\Renderer\ECS\Component.h" />
     <ClInclude Include="src\Renderer\ECS\Entity.h" />
+    <ClInclude Include="src\Renderer\ECS\Object.h" />
+    <ClInclude Include="src\Renderer\ECS\old Component.h" />
+    <ClInclude Include="src\Renderer\ECS\old System.h" />
+    <ClInclude Include="src\Renderer\ECS\RenderQueue.h" />
     <ClInclude Include="src\Renderer\ECS\System.h" />
+    <ClInclude Include="src\Renderer\Loader\AssetManager.h" />
     <ClInclude Include="Umbrella Engine.h" />
   </ItemGroup>
   <ItemGroup>

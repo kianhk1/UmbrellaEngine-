@@ -3,52 +3,56 @@
 #include <string>
 #include <ctime>
 #include <sstream>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#define Warn(x) Logger::WARN("[\033[1;34mLINE:" + to_string(__LINE__) + "\033[0m]" + "[\033[1;34mFILE:" +std::string(__FILE__)+ "\033[0m]\n" + x)
-#define Info(x) Logger::INFO("[\033[1;34mLINE:" + to_string(__LINE__) + "\033[0m]\n" + x)
-using namespace std;
-enum class LogLevel{
-	INFO,
-	WARN,
-	ERROR,
-	FATAL
-};
-enum class InitError{
-    error,
-    GLFW_INIT_FAILED_Error,
-    WINDOW_CREATE_FAIL_Error,
-    GLAD_INIT_FAILED_Error,
-    Shader_Compile_Error,
-    Shader_Create_Error,
-    unused_uniform_Error,
-    uniform_not_found_Warning,
-    Texture_not_bound_Warning,
-    GLFW_INIT,
-    WINDOW_CREATE,
-    GLAD_INIT,
-    Shader_Compile,
-    Shader_Create,
-    Set_uniform,
-    Texture_bound
-};
-class Logger {
-public:
-    static void error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
-    static void Get_Error(InitError stat, int id, string where, const char* FILE);
-    static void log(LogLevel level, string masseage);
-    static void INFO(string masseage);
-    static void WARN(string masseage);
-    static void ERROR(string masseage);
-    static void FATAL(string masseage);
-    static string get_msg() {
-        return messages;
-    }
+#include <queue>
+#include <mutex>
 
-private:
-    static string levelToString(LogLevel level);
-    static string currentTime();
-    static string messages;
-};
+#include "../Data/Data.h"
+
+#define øFatal(category, message) Engine::CORE::Logger::FATAL(__LINE__, std::string(__FILE__), category, message)
+#define Error(category, message) Engine::CORE::Logger::ERROR(__LINE__, std::string(__FILE__), category, message)
+#define Warn(category, message) Engine::CORE::Logger::WARN(__LINE__, std::string(__FILE__), category, message)
+#define Info(category, message) Engine::CORE::Logger::INFO(__LINE__, std::string(__FILE__), category, message)
+
+using namespace std;
+namespace Engine{
+    namespace CORE {
+        enum class LogLevel {
+            DBUG = 0,
+            INFO,
+            WARN,
+            ERROR,
+            FATAL
+        };
+        enum class LogCategory{
+            Nune = 0,
+            Core,
+            Renderer,
+            Window,
+            Input,
+            Resource,
+            ECS,
+            API,
+            Audio, 
+            Physics 
+        };
+        class Logger {
+        public:
+            static void log(LogLevel level, uint32_t& line, string& file, LogCategory& category, string& message);
+            static void INFO(uint32_t line, string file, LogCategory category, string message);
+            static void WARN(uint32_t line, string file, LogCategory category, string message);
+            static void ERROR(uint32_t line, string file, LogCategory category, string message);
+            static void FATAL(uint32_t line, string file, LogCategory category, string message);
+            static void Flush();
+        private:
+            static string levelToString(LogLevel level);
+            static string currentTime();
+            static string ShortFile(const std::string& path);
+
+            static std::mutex LogMutex;
+            static std::queue<DATA::LogMessageData> LogQueue;
+        };
+    }
+}
 

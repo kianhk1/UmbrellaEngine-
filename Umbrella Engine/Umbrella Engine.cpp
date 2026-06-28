@@ -1,9 +1,6 @@
 ﻿#include "src/Renderer/ECS/System.h"
-#include "src/Renderer/API/WindowAPI/openglWindowAPI.h"
+#include "src/Renderer/API/WindowAPI/WindowAPI.h"
 #include <iostream>
-
-std::shared_ptr<Engine::API::GraphicsAPI> GUE;
-std::shared_ptr<Engine::API::openglWindowAPI> WUE = std::make_shared<Engine::API::openglWindowAPI>();
 
 class ObjCube
 {
@@ -14,13 +11,35 @@ public:
 		MeshComponent m;
 		m.meshdata.vertices = vertex;
 		m.meshdata.indices = index;
-		ShaderComponent s;
-		s.shader.path_Vertex_Shader = "Shader/vvvv.glsl";
-		s.shader.path_Fragment_Shader = "Shader/fffff.glsl";
+		MatrialComponent ma;
+		ma.matrialdata.shader.ID =
+			Engine::AssetManager::GetInstance().LoadShader("Shader/vvvv.glsl", "Shader/fffff.glsl").ID;
+		ma.matrialdata.textures[0].ID =
+			Engine::AssetManager::GetInstance().LoadTexture("Assets/as.jpg").ID;
+
 		registry.emplace<TransformComponent>(Entity,t); 
 		registry.emplace<MeshComponent>(Entity,m); 
-		registry.emplace<ShaderComponent>(Entity,s);
+		registry.emplace<MatrialComponent>(Entity, ma);
 	}
+	ObjCube(glm::vec3 pos) {
+		Entity = registry.create();
+		TransformComponent t;
+		t.position = pos;
+		MeshComponent m;
+		m.meshdata.vertices = vertex;
+		m.meshdata.indices = index;
+		MatrialComponent ma;
+		ma.matrialdata.shader.ID =
+			Engine::AssetManager::GetInstance().LoadShader("Shader/vvvv.glsl", "Shader/fffff.glsl").ID;
+		ma.matrialdata.textures[0].ID =
+			Engine::AssetManager::GetInstance().LoadTexture("Assets/as.jpg").ID; 
+		Engine::AssetManager::GetInstance().GetTexture(ma.matrialdata.textures[0])->unit = 0;
+
+		registry.emplace<TransformComponent>(Entity, t);
+		registry.emplace<MeshComponent>(Entity, m);
+		registry.emplace<MatrialComponent>(Entity, ma);
+	}
+	entt::entity Entity;
 private:
 	std::vector<float> vertex = {
 		//  x,    y,    z,        r,   g,   b,      u,  v,       nx,    ny,    nz,      tx,    ty,    tz
@@ -68,26 +87,69 @@ private:
 	   16,17,18,18,19,16,       // بالا
 	   20,21,22,22,23,20        // پایین
 	};
-	entt::entity Entity;
+
 };
 
 
 
 int main() {
-	std::shared_ptr < Engine::API::window> win = WUE->InitWindow(800, 600, "Umbrella Engine");
-	GUE = Engine::API::openglAPI::creategraphicAPI(); 
-	WUE->SetWindowIcon(win, "Assets/Umbrella.png");
+	std::shared_ptr <Engine::DATA::windowData> win = Engine::API::InitWindow(800, 600, "Umbrella Engine");
+	Engine::API::SetWindowIcon(win, "Assets/Umbrella.png");
+	Engine::API::initialize();
+	Engine::API::Input::InitInput(win);
+	std::thread([win]() {
+		while (!Engine::API::IsWindowShouldClose(win))
+		{
+			Engine::CORE::Logger::Flush();
+
+			std::this_thread::sleep_for(
+				std::chrono::milliseconds(10));
+		}
+		}).detach();
+
+	Engine::API::HideCursor(win);
 
 	ObjCube cccc;
+	ObjCube nn({ -1,-1,-1 });
 
-	RenderSystem sys(GUE);
+	entt::entity camera = registry.create();
+	CameraComponent cam;
+	TransformComponent trans;
+	cam.type = ProjectionType::Perspective;
+	
+	trans.position = { -2,0,0 };
+	registry.emplace<CameraComponent>(camera, cam);
+	registry.emplace<TransformComponent>(camera, trans);
+	
+	RenderSystem sys;
+	CameraSystem ccc(win);
 	sys.Start();
-	//registry
-	while (!WUE->IsWindowShouldClose(win)) 
+	ccc.Start();
+	int frameCount = 0;
+	
+
+	while (!Engine::API::IsWindowShouldClose(win))
 	{
-		GUE->clearBuffers(); 
-		GUE->clearColor(0.8f, 0.8f, 0.8f, 1.0f); 
+		Engine::API::clearBuffers();
+		Engine::API::clearColor(0.8f, 0.8f, 0.8f, 1.0f);
+		Engine::Event::EventManager::GetInstance().Subscribe("windowresize", [&](void* d) {
+			auto* size = static_cast<Engine::DATA::Size*>(d);
+			std::cout << "x:" << size->width << " y:" << size->height << '\n';
+			});
+		
+		if (Engine::API::Input::IsKeyPressed(win, Engine::API::KeyboardKey::KEY_W)) {
+			Info(Engine::CORE::LogCategory::Nune, "Right mouse button pressed.");
+		}
+
 		sys.Update(0.0f);
-		WUE->update(win); 
+		ccc.Update(0.0f);
+		Engine::API::update(win);
+
+		frameCount++;
+		if (Engine::API::Input::IsKeyPressed(win, Engine::API::KeyboardKey::KEY_ESCAPE)) {
+			Engine::API::CloseWindow(win);
+		}
+		Engine::Event::EventManager::GetInstance().Clear();
 	}
+	Engine::API::shutdown();
 }

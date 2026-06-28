@@ -2,17 +2,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "../Data/Data.h"
+#include "../../Core/Data/Data.h"
 
 enum class ProjectionType
 {
 	Perspective,
 	Orthographic
-};
-
-class ShaderComponent {
-public:
-	DATA::ShaderData shader;
 };
 class TransformComponent {
 public:
@@ -31,30 +26,26 @@ public:
 };
 class MeshComponent{
 public:
-	DATA::MeshData meshdata;
-};
-class Texture2DComponent {
-public:
-	DATA::Texture2DData t_data;
+	Engine::DATA::MeshData meshdata;
 };
 class CameraComponent {
 public:
-	DATA::CameraData cameradata;
+	Engine::DATA::CameraData cameradata;
 	ProjectionType type;
 	int UBO_ID;
 	float sensitivity = 0.1f;
-	static float yaw, pitch;
+	float yaw, pitch;
 	static bool firstMouse;
 	bool ismoving = true;
 };
-float CameraComponent::yaw, CameraComponent::pitch;
+//float CameraComponent::yaw, CameraComponent::pitch;
 bool CameraComponent::firstMouse = true;
-class aa {
+class MatrialComponent {
 public:
-
+	Engine::DATA::MaterialData matrialdata;
 };
 class LightComponent {
 public:
 	int UBO_ID;
-	DATA::LightData light;
+	Engine::DATA::LightData light;
 };

@@ -17,14 +17,14 @@ namespace Engine {
 			windowclosecallback(Window->windowcontext->window);
 		}
 		bool Input::IsKeyPressed(std::shared_ptr<DATA::windowData> Window, KeyboardKey key) {
-			if (Window->keyboardKey[static_cast<int>(key)] == Action::KEY_PRESS) {
+			if (Window->keyboardKey[static_cast<int>(key)] == Action::KEY_PRESS or Window->keyboardKey[static_cast<int>(key)] == Action::KEY_REPEAT) {
 				return true;
 			}
 
 			return false;
 		}
 		bool Input::IsButtonPressed(std::shared_ptr<DATA::windowData> Window, MouseButton button) {
-			if (Window->mouseButton[static_cast<int>(button)] == Action::KEY_PRESS) {
+			if (Window->mouseButton[static_cast<int>(button)] == Action::KEY_PRESS or Window->mouseButton[static_cast<int>(button)] == Action::KEY_REPEAT) {
 				return true;
 			}
 			return false;

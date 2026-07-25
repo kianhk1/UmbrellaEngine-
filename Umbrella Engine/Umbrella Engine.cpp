@@ -8,36 +8,25 @@ public:
 	ObjCube() {
 		Entity = registry.create();
 		TransformComponent t;
-		MeshComponent m;
-		m.meshdata.vertices = vertex;
-		m.meshdata.indices = index;
-		MatrialComponent ma;
-		ma.matrialdata.shader.ID =
+		MeshRendererComponent m;
+		m.modelhandle =
+			Engine::AssetManager::GetInstance().LoadModel("Assets/8888.gltf");
+		m.shader.ID = 
 			Engine::AssetManager::GetInstance().LoadShader("Shader/vvvv.glsl", "Shader/fffff.glsl").ID;
-		ma.matrialdata.textures[0].ID =
-			Engine::AssetManager::GetInstance().LoadTexture("Assets/as.jpg").ID;
-
 		registry.emplace<TransformComponent>(Entity,t); 
-		registry.emplace<MeshComponent>(Entity,m); 
-		registry.emplace<MatrialComponent>(Entity, ma);
+		registry.emplace<MeshRendererComponent>(Entity,m);
 	}
 	ObjCube(glm::vec3 pos) {
 		Entity = registry.create();
 		TransformComponent t;
 		t.position = pos;
-		MeshComponent m;
-		m.meshdata.vertices = vertex;
-		m.meshdata.indices = index;
-		MatrialComponent ma;
-		ma.matrialdata.shader.ID =
+		MeshRendererComponent m;
+		m.modelhandle =
+			Engine::AssetManager::GetInstance().LoadModel("Assets/backpack.obj");
+		m.shader.ID =
 			Engine::AssetManager::GetInstance().LoadShader("Shader/vvvv.glsl", "Shader/fffff.glsl").ID;
-		ma.matrialdata.textures[0].ID =
-			Engine::AssetManager::GetInstance().LoadTexture("Assets/as.jpg").ID; 
-		Engine::AssetManager::GetInstance().GetTexture(ma.matrialdata.textures[0])->unit = 0;
-
 		registry.emplace<TransformComponent>(Entity, t);
-		registry.emplace<MeshComponent>(Entity, m);
-		registry.emplace<MatrialComponent>(Entity, ma);
+		registry.emplace<MeshRendererComponent>(Entity, m);
 	}
 	entt::entity Entity;
 private:
@@ -87,10 +76,7 @@ private:
 	   16,17,18,18,19,16,       // بالا
 	   20,21,22,22,23,20        // پایین
 	};
-
 };
-
-
 
 int main() {
 	std::shared_ptr <Engine::DATA::windowData> win = Engine::API::InitWindow(800, 600, "Umbrella Engine");
@@ -110,7 +96,7 @@ int main() {
 	Engine::API::HideCursor(win);
 
 	ObjCube cccc;
-	ObjCube nn({ -1,-1,-1 });
+	//ObjCube nn({ -1,-1,-1 });
 
 	entt::entity camera = registry.create();
 	CameraComponent cam;
@@ -138,7 +124,7 @@ int main() {
 			});
 		
 		if (Engine::API::Input::IsKeyPressed(win, Engine::API::KeyboardKey::KEY_W)) {
-			Info(Engine::CORE::LogCategory::Nune, "Right mouse button pressed.");
+			//Info(Engine::CORE::LogCategory::Nune, "Right mouse button pressed.");
 		}
 
 		sys.Update(0.0f);

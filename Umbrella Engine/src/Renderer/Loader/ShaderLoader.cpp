@@ -34,7 +34,6 @@ namespace Engine {
         auto it = shaders.find(Handle.ID);
         if (!(it == shaders.end()))
             return it->second;
-        Info(Engine::CORE::LogCategory::Nune, "Right mouse button pressed.");
         return nullptr;
     }
 }

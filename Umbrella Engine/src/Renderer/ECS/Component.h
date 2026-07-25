@@ -24,9 +24,11 @@ public:
 
 	TransformComponent* parent = nullptr;
 };
-class MeshComponent{
+class MeshRendererComponent {
 public:
-	Engine::DATA::MeshData meshdata;
+	Engine::DATA::ModelHandle modelhandle;
+	Engine::DATA::ShaderHandle shader;
+	Engine::DATA::RenderState state;
 };
 class CameraComponent {
 public:
@@ -40,10 +42,6 @@ public:
 };
 //float CameraComponent::yaw, CameraComponent::pitch;
 bool CameraComponent::firstMouse = true;
-class MatrialComponent {
-public:
-	Engine::DATA::MaterialData matrialdata;
-};
 class LightComponent {
 public:
 	int UBO_ID;

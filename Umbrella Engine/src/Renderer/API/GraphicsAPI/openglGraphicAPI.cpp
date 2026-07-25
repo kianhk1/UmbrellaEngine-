@@ -25,7 +25,7 @@ namespace Engine {
                 return false;
             const GLubyte* version = glGetString(GL_VERSION);
             Info(Engine::CORE::LogCategory::API,
-                "OpenGL Version: " + string(reinterpret_cast<const char*>(version)));
+                "OpenGL Version: " , reinterpret_cast<const char*>(version));
             if (usingdebugoutput) {
                 //InitDebugOutPut(Logger::error_callback);
             }
@@ -70,7 +70,7 @@ namespace Engine {
             glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
             if (!success) {
                 glGetShaderInfoLog(shaderID, 512, nullptr, infoLog);
-                Error(Engine::CORE::LogCategory::API, "Shader compilation failed: " + string(infoLog));
+                Error(Engine::CORE::LogCategory::API, "Shader compilation failed: " , infoLog);
                 glDeleteProgram(shaderID);
                 return 0;
             }
@@ -86,7 +86,7 @@ namespace Engine {
             glGetProgramiv(programID, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(programID, 512, nullptr, infoLog);
-                Error(Engine::CORE::LogCategory::API, "Shader program linking failed: " + string(infoLog));
+                Error(Engine::CORE::LogCategory::API, "Shader program linking failed: " , infoLog);
                 glDeleteProgram(programID);
                 return false;
             }
@@ -191,15 +191,15 @@ namespace Engine {
             if (images.log.empty()) {
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, images.width, images.height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, images.pixels);
                 glGenerateMipmap(GL_TEXTURE_2D);
-                Info(Engine::CORE::LogCategory::API, "Texture loaded successfully: " +
-                    texturedata->paths[0] + " (" + to_string(images.width) + "x" + to_string(images.height) + ")");
+                Info(Engine::CORE::LogCategory::API, "Texture loaded successfully: " ,
+                    texturedata->paths[0] , " (" , images.width , "x" , images.height , ")");
                 CORE::Reader::Freeimage(images);
                 return true;
             }
             else {
-                Error(Engine::CORE::LogCategory::API, "Texture loaded unsuccessfully: " +
-                    texturedata->paths[0] + " (" + to_string(images.width) + "x" +
-                    to_string(images.height) + ")\n" + images.log + "\n");
+                Error(Engine::CORE::LogCategory::API, "Texture loaded unsuccessfully: " ,
+                    texturedata->paths[0] , " (" , images.width , "x" ,
+                    images.height , ")\n" , images.log , "\n");
                 CORE::Reader::Freeimage(images);
                 return false;
             }
@@ -223,7 +223,7 @@ namespace Engine {
             const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
             if (loc == -1) {
-                Warn(Engine::CORE::LogCategory::API, "Uniform '" + string(name) + "' not found in shader program " + to_string(shaderID));
+                Warn(Engine::CORE::LogCategory::API, "Uniform '" , name , "' not found in shader program " , shaderID);
                 return;
             }
             std::visit([&](auto&& value)
@@ -255,9 +255,10 @@ namespace Engine {
                         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
                     }
                     else {
-                        Warn(Engine::CORE::LogCategory::API, "Uniform type not soported in shader program ");
+                        Warn(Engine::CORE::LogCategory::API, "Uniform type not soported in shader program.");
                     }
                 }, value);
+            
             return;
         }
         //bool isInitialized() const ;

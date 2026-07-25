@@ -27,7 +27,8 @@ namespace Engine {
                 const std::string& fragment);
         std::shared_ptr<DATA::ShaderData> GetShader(DATA::ShaderHandle Handle);
 
-        std::shared_ptr<DATA::ModelData> LoadModel(const std::string& path);
+        DATA::ModelHandle LoadModel(const std::string& path);
+        std::shared_ptr<DATA::ModelData> GetModel(DATA::ModelHandle Handle);
 
         static AssetManager& GetInstance() {
             static AssetManager instance;

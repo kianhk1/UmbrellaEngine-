@@ -41,6 +41,12 @@ namespace Engine {
             ShaderHandle(uint32_t id) : ID(id) {}
             uint32_t ID = 0;
         };
+        struct ModelHandle
+        {
+            ModelHandle() = default;
+            ModelHandle(uint32_t id) : ID(id) {}
+            uint32_t ID = 0;
+        };
 
         struct LightData {
             glm::vec3 lightcolor = glm::vec3(1.0f);
@@ -66,18 +72,13 @@ namespace Engine {
         };
 
         struct MeshData {
-            unsigned int vaoID = 0;
+            MeshData() = default;
+            unsigned int vaoID = 0; 
             unsigned int vboID = 0;
             unsigned int iboID = 0;
             int indexCount = 0;
             std::vector<float> vertices;
             std::vector<unsigned int> indices;
-        };
-
-        struct ModelData
-        {
-            std::vector<MeshData>& meshes;
-            std::string path;
         };
 
         struct TextureData {
@@ -102,31 +103,54 @@ namespace Engine {
         {
             bool depthtest = true;
         };
-        struct MaterialParameter
-        {
-            std::string name;
-            UniformType type;
-            std::variant<
-                int,
-                float,
-                glm::vec2,
-                glm::vec3,
-                glm::vec4,
-                glm::mat4
-            > value;
-        };
-        struct MaterialData
-        {
-            ShaderHandle shader;
-
+        using Uniform = std::variant<
+            int,
+            float,
+            glm::vec2,
+            glm::vec3,
+            glm::vec4,
+            glm::mat4
+        >;
+        struct MaterialData {
             std::unordered_map<
                 uint32_t,
                 TextureHandle
             > textures;
-            std::vector<MaterialParameter> parameter;
-            RenderState state;
+            std::unordered_multimap<std::string, Uniform> uniforms;
+            
         };
+       
+        struct Node
+        {
+            int cc = 0;
+            std::vector<std::shared_ptr<Node>> children;
+            std::string name;
+            glm::mat4 localTransform;
+            glm::mat4 worldTransform;
+            std::vector<uint32_t> meshIndices;
 
+            template<typename F>
+            void each(F&& f, int depth = 0) 
+            {
+                f(*this, depth);
+                
+                for (auto& child : children)
+                {
+
+                    child->each(std::forward<F>(f), depth + 1);
+                }
+            }
+        };
+        struct ModelPart
+        {
+            MeshData mesh;
+            MaterialData material;
+        };
+        struct ModelData
+        {
+            std::shared_ptr<DATA::Node> root;
+            std::vector<ModelPart> parts; 
+        };
 
         struct Size { int width; int height; };
         struct Point { int x; int y; };
@@ -177,6 +201,15 @@ namespace Engine {
             std::string file;
             uint32_t line;
             std::string time;
+            bool hederprint = true;
+            bool operator==(const LogMessageData& other) const
+            {
+                return level == other.level &&
+                    category == other.category &&
+                    file == other.file &&
+                    line == other.line;
+            }
+
         };
 
         struct Payload {

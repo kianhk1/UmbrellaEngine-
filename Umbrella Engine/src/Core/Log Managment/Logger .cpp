@@ -1,6 +1,5 @@
 #include "Logger.h"
 
-//#define warn(x) Logger::WARN("[" +to_string(__LINE__)+ "]" + x)
 namespace Engine {
     namespace CORE {
         void error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
@@ -63,7 +62,7 @@ namespace Engine {
         }
 
 
-        void Logger::log(LogLevel level, uint32_t& line, string& file, LogCategory& category, string& message) {
+        void Logger::log(LogLevel level, uint32_t& line, string& file, LogCategory& category, string message) {
             DATA::LogMessageData Log;
             Log.level = level; 
             Log.time = currentTime();
@@ -71,25 +70,26 @@ namespace Engine {
 			Log.file = ShortFile(file);
             Log.category = category; 
             Log.message = message; 
+            std::lock_guard<std::mutex> lock(LogMutex);
+            auto currentlog = std::find(oldLogs.begin(), oldLogs.end(), Log);
 
-            if (level == LogLevel::FATAL) {
-                Log.message = Log.message + "\nFatal error encountered. Exiting program.";
+            if (currentlog == oldLogs.end())
+            {
+                if (level == LogLevel::FATAL)
+                    Log.message += "\nFatal error encountered. Exiting program.";
+
+                LogQueue.push(Log);
+                oldLogs.push_back(Log);
             }
-			std::lock_guard<std::mutex> lock(LogMutex);
-			LogQueue.push(Log);
+            else if (currentlog->message != Log.message)
+            {
+                Log.hederprint = false;
+                LogQueue.push(Log);
+                oldLogs.push_back(Log);
+            }
         }
-        void Logger::INFO(uint32_t line, string file, LogCategory category, string message) {
-            log(LogLevel::INFO, line, file, category, message);
-        }
-        void Logger::WARN(uint32_t line, string file, LogCategory category, string message) {
-            log(LogLevel::WARN, line, file, category, message);
-        }
-        void Logger::ERROR(uint32_t line, string file, LogCategory category, string message) {
-            log(LogLevel::ERROR, line, file, category, message);
-        }
-        void Logger::FATAL(uint32_t line, string file, LogCategory category, string message) {
-            log(LogLevel::FATAL, line, file, category, message);
-        }
+
+
         void Logger::Flush() {
             std::lock_guard<std::mutex> lock(LogMutex);
             while (!LogQueue.empty()) {
@@ -131,14 +131,17 @@ namespace Engine {
                         break;
                     }
                     };
-                
-                std::cout << "[" << levelToString(log.level) << "][" << log.time 
-                          << "][\033[1;34m" << log.file << ":" << log.line << "\033[0m]" 
-                          << "[" << category(log.category) << "]\n" << log.message << std::endl;
+                if (log.hederprint)
+                    std::cout << "[" << levelToString(log.level) << "][" << log.time
+                        << "][\033[1;34m" << log.file << ":" << log.line << "\033[0m]"
+                        << "[" << category(log.category) << "]\n" << log.message << std::endl;
+                else
+                    std::cout << log.message << std::endl;
+
                 LogQueue.pop();
             }
         }
-
+            
         string Logger::levelToString(LogLevel level) {
             switch (level) {
             case LogLevel::INFO: return "\033[1;32mINFO\033[0m";
@@ -168,7 +171,7 @@ namespace Engine {
 
             return path;
         }
-
+        std::vector<DATA::LogMessageData> Logger::oldLogs;
         std::mutex Logger::LogMutex;
         std::queue<DATA::LogMessageData> Logger::LogQueue;
     }

@@ -3,6 +3,7 @@
 #include "../../Input & Output Manager/Input System/InputSystem.h"
 #include "../Loader/AssetManager.h"
 #include "Entity.h"
+
 class SystemManager {
 public:
 
@@ -18,38 +19,67 @@ public:
 class RenderSystem : public System {
 public:
 	void Start() override {
-		auto view = registry.view<TransformComponent, MeshComponent, MatrialComponent>();
-		
+		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,
-				MeshComponent& mesh,
-				MatrialComponent matrial){
+				MeshRendererComponent& render){
 					// init mesh
-					mesh.meshdata = Engine::API::createMesh(mesh.meshdata.vertices, mesh.meshdata.indices);
-					Engine::API::setAttrib(mesh.meshdata, 0, 3, 14, 0);
-					Engine::API::setAttrib(mesh.meshdata, 1, 3, 14, 3);
-					Engine::API::setAttrib(mesh.meshdata, 2, 2, 14, 6);
-					Engine::API::setAttrib(mesh.meshdata, 3, 3, 14, 8);
-					Engine::API::setAttrib(mesh.meshdata, 4, 3, 14, 11);
-					updateTransform(transform);
-					
-					Engine::API::SetUniform(Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader)->programID,
-						Engine::AssetManager::GetInstance().GetTexture(matrial.matrialdata.textures[0])->unit, "albedoTexture");
+					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
+					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
+
+					for (auto& part : modeldata->parts) {
+						 
+						part.mesh = Engine::API::createMesh(part.mesh.vertices, part.mesh.indices); 
+						Engine::API::setAttrib(part.mesh, 0, 3, 14, 0);
+						Engine::API::setAttrib(part.mesh, 1, 3, 14, 3);
+						Engine::API::setAttrib(part.mesh, 2, 2, 14, 6);
+						Engine::API::setAttrib(part.mesh, 3, 3, 14, 8);
+						Engine::API::setAttrib(part.mesh, 4, 3, 14, 11);
+						for (auto& it : part.material.textures) {
+							Engine::API::SetUniform(shaderldata->programID,
+								Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, "albedoTexture");
+							//Warn(Engine::CORE::LogCategory::API, "sfdsfdsfdsfdf");
+						}
+					} 
+					modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+						Warn(Engine::CORE::LogCategory::API, depth ? '|' : '\0', std::string(depth, '-'), depth ? '>' : '\0', node.name);
+						});
+		 
 			});
 	}
 	void Update(float dt) override {
-		auto view = registry.view<TransformComponent, MeshComponent, MatrialComponent>();
+		auto view = registry.view<TransformComponent, MeshRendererComponent>();
+		
 
 		view.each( 
 			[this](auto entity,
 				TransformComponent& transform, 
-				MeshComponent& mesh, 
-				MatrialComponent matrial) {
-					Engine::API::useShader(*Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader));
-					Engine::API::SetUniform(Engine::AssetManager::GetInstance().GetShader(matrial.matrialdata.shader)->programID, transform.modelMatrix, "model");
-					Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(matrial.matrialdata.textures[0]));
-					Engine::API::drawMesh(mesh.meshdata, matrial.matrialdata.state);
+				MeshRendererComponent& render) { 
+					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
+					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
+
+					Engine::API::useShader(*shaderldata);
+					modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+						Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model"); 
+						
+						
+						for(const int& i : node.meshIndices)
+						{
+							for (const auto& it : modeldata->parts[i].material.textures)
+							{
+								Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(it.second));
+							}
+							for (const auto& it : modeldata->parts[i].material.uniforms)
+							{ 
+								
+								Engine::API::SetUniform(shaderldata->programID, it.second, it.first.c_str());
+							}
+							Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
+						}
+						});
+					updateTransform(transform);
+					
 			});
 	}
 private:
@@ -147,6 +177,8 @@ public:
 						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(cam.cameradata.projection), 0, sizeof(glm::mat4));
 						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(cam.cameradata.view), sizeof(glm::mat4), sizeof(glm::mat4));
 						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(transform.position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
+
+						Move(transform, 0.1);
 					}
 			});
 	}
@@ -175,6 +207,30 @@ private:
 			cam.pitch = 89.0f;
 		if (cam.pitch < -89.0f)
 			cam.pitch = -89.0f;
+	}
+	void Move(TransformComponent& transform, float dt) {
+
+		float velocity = 2 * dt;
+		if (Engine::API::Input::IsKeyPressed(Window,Engine::API::KeyboardKey::KEY_W)) {
+			transform.position += transform.forward * velocity;// جلو
+		}
+		if (Engine::API::Input::IsKeyPressed(Window, Engine::API::KeyboardKey::KEY_S)) {
+			transform.position -= transform.forward * velocity;// عقب 
+		}
+		if (Engine::API::Input::IsKeyPressed(Window, Engine::API::KeyboardKey::KEY_A)) {
+			transform.position -= transform.right * velocity; 
+			//transform->position.x -= transform->forward.x * velocity;// چپ               
+		}
+		if (Engine::API::Input::IsKeyPressed(Window, Engine::API::KeyboardKey::KEY_D)) {
+			transform.position += transform.right * velocity;
+			//transform->position.x += transform->forward.x * velocity;// راست               
+		}
+		if (Engine::API::Input::IsKeyPressed(Window, Engine::API::KeyboardKey::KEY_SPACE)) {
+			transform.position += transform.up * velocity;// بالا 
+		}
+		if (Engine::API::Input::IsKeyPressed(Window, Engine::API::KeyboardKey::KEY_LEFT_SHIFT)) {
+			transform.position -= transform.up * velocity;// پایین 
+		}
 	}
 };
 

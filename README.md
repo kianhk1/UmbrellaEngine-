@@ -232,7 +232,7 @@ This project is licensed under the MIT License.
 
 <p align="center">
 
-Made with ❤️ and Modern C++
+Made with Modern C++
 
 If you like this project, consider giving it a ⭐ on GitHub!
 

@@ -178,8 +178,9 @@ UmbrellaEngine/
 # 📸 Screenshots
 
 Screenshots and videos will be added as development progresses.
+<img width="793" height="630" alt="Screenshot 2026-07-27 143816" src="https://github.com/user-attachments/assets/af9b7b1a-4a81-4f6e-ba63-ed449d60c747" />
+<img width="1056" height="1007" alt="Screenshot 2026-07-27 143839" src="https://github.com/user-attachments/assets/9bb999b5-698c-4dad-939f-ee00b40f32a1" />
 
----
 
 # 💡 Why UmbrellaEngine?
 

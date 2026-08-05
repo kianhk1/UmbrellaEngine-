@@ -17,6 +17,7 @@ namespace Engine {
             int height = 0;
 			int nrChannels = 0;
             unsigned char* pixels = 0;
+			
 			std::string log;
         };
 		
@@ -25,10 +26,10 @@ namespace Engine {
 		{
 		public:
 			struct Data;
-			static ImageData Readimage(const std::string& path) {
+			static ImageData Readimage(const std::string& path,bool flip = true) {
 				if (!FileSystem::Exists(path))
 					return {};
-				stbi_set_flip_vertically_on_load(true);
+				stbi_set_flip_vertically_on_load(flip);
 				ImageData image;
 				image.pixels = stbi_load(path.c_str(), &image.width, &image.height, &image.nrChannels, 0);
 				if (image.pixels) {
@@ -55,7 +56,7 @@ namespace Engine {
 						aiProcess_Triangulate |
 						aiProcess_CalcTangentSpace |
 						aiProcess_JoinIdenticalVertices |
-						aiProcess_FlipUVs |
+						//aiProcess_FlipUVs |
 						aiProcess_OptimizeMeshes |
 						aiProcess_GenSmoothNormals |
 						aiProcess_ImproveCacheLocality);
@@ -143,27 +144,65 @@ namespace Engine {
 			struct Materialdesc
 			{
 				std::unordered_multimap<std::string, DATA::Uniform> uniforms;
-				std::vector<std::string> texturedesc;
+				std::unordered_multimap<std::string, DATA::TextureDesc> texturedesc;
 			};
 			static Materialdesc processMaterial(aiMaterial* material) {
 				aiString path;
 				Materialdesc matrialdesc;
+				
 				// ÇÓÊÎÑÇÌ ÈÇÝÊåÇ (ÇÖÇÝå ˜ÑÏä ÔÑØ ÈÑÇí ÌáæíÑí ÇÒ ãÓíÑåÇí ÇÔÊÈÇå)
-				if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
-					matrialdesc.texturedesc.push_back(std::string("Assets/") + path.C_Str());
-				if (material->GetTexture(aiTextureType_SPECULAR, 0, &path) == AI_SUCCESS)
-					matrialdesc.texturedesc.push_back(std::string("Assets/") + path.C_Str());
-				if (material->GetTexture(aiTextureType_HEIGHT, 0, &path) == AI_SUCCESS)
-					matrialdesc.texturedesc.push_back(std::string("Assets/") + path.C_Str());
-				//else texturedesc.push_back("Assets/sun.png");
-				aiColor4D color; 
-				if (material->Get(AI_MATKEY_BASE_COLOR, color) == AI_SUCCESS)
+				if (material->GetTexture(aiTextureType_BASE_COLOR, 0, &path) == AI_SUCCESS)
 				{
-					matrialdesc.uniforms.emplace("color", ConvertVctor4(color));
+					DATA::TextureDesc texturedesc; 
+					texturedesc.isLinear = false;
+					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str()));
+					matrialdesc.texturedesc.emplace("albedoTexture", texturedesc);
 				}
-				else if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+				else {
+					aiColor4D color;
+					if (material->Get(AI_MATKEY_BASE_COLOR, color) == AI_SUCCESS)
+					{
+						matrialdesc.uniforms.emplace("color", ConvertVctor4(color));
+					}
+					else if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+					{
+						matrialdesc.uniforms.emplace("color", ConvertVctor4(color));
+					}
+				}
+				if (material->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS)
 				{
-					matrialdesc.uniforms.emplace("color", ConvertVctor4(color));
+					DATA::TextureDesc texturedesc; 
+					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
+					matrialdesc.texturedesc.emplace("normalTexture", texturedesc);
+				}
+
+				if (material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &path) == AI_SUCCESS)
+				{
+					DATA::TextureDesc texturedesc; 
+					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
+					matrialdesc.texturedesc.emplace("metallicRoughnessTexture", texturedesc);
+				}
+				if (material->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &path) == AI_SUCCESS)
+				{
+					DATA::TextureDesc texturedesc; 
+					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str()));
+					matrialdesc.texturedesc.emplace("aoTexture", texturedesc);
+				}
+
+				if (material->GetTexture(aiTextureType_EMISSION_COLOR, 0, &path) == AI_SUCCESS)
+				{
+					DATA::TextureDesc texturedesc; 
+					texturedesc.isLinear = false; 
+					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
+					matrialdesc.texturedesc.emplace("emissiveTexture", texturedesc);
+				}
+				else {
+					aiColor3D emissive;
+					if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive) == AI_SUCCESS)
+					{
+						matrialdesc.uniforms.emplace("emissiveColor",
+							glm::vec3(emissive.r, emissive.g, emissive.b));
+					}
 				}
 				return matrialdesc;
 			}
@@ -184,6 +223,7 @@ namespace Engine {
 					unsigned int meshIndex = node->mMeshes[i];
 					aiMesh* mesh = scene->mMeshes[meshIndex];
 					data.parts.push_back({ load_mesh(mesh, scene) ,processMaterial(scene->mMaterials[mesh->mMaterialIndex]) });
+					//PrintMaterial(scene->mMaterials[mesh->mMaterialIndex]);
 					currentNode->meshIndices.push_back(data.parts.size() - 1);
 				}
 
@@ -232,6 +272,28 @@ namespace Engine {
 				glm::vec4 result(v4.r, v4.g, v4.b, v4.a);
 
 				return result;
+			}
+			static void PrintMaterial(aiMaterial* material) {
+				for (int t = aiTextureType_NONE; t <= aiTextureType_TRANSMISSION; t++)
+				{
+					auto type = static_cast<aiTextureType>(t);
+
+					unsigned int count = material->GetTextureCount(type);
+
+					if (count == 0)
+						continue;
+
+					Warn(CORE::LogCategory::Resource, "TextureType ", t, '\n');
+
+					for (unsigned int i = 0; i < count; i++)
+					{
+						aiString path;
+						material->GetTexture(type, i, &path);
+
+						std::cout << "    " << path.C_Str() << '\n';
+						Warn(CORE::LogCategory::Resource, "    ", path.C_Str(), '\n');
+					}
+				}
 			}
 			Reader() = default;
 

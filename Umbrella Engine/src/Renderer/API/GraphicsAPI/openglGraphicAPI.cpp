@@ -50,8 +50,13 @@ namespace Engine {
         }
 
         // پاک کردن بافر رنگ و عمق
-        void clearBuffers() {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        void clearBuffers(int buffers) {
+            if(buffers && COLOR)
+                glClear(GL_COLOR_BUFFER_BIT);
+            if (buffers && DEPTH)
+                glClear(GL_DEPTH_BUFFER_BIT);
+            if (buffers && STENCIL)
+                glClear(GL_STENCIL_BUFFER_BIT);
         }
 
         // مدیریت شیدرها
@@ -149,10 +154,12 @@ namespace Engine {
         }
         void drawMesh(DATA::MeshData& buffers, DATA::RenderState state) {
             glDepthMask(state.depthtest);
-            glDepthFunc(GL_LESS);
+            glEnable(GL_FRAMEBUFFER_SRGB);
+            glDepthFunc(state.depthfunc);
             glBindVertexArray(buffers.vaoID);
             glDrawElements(GL_TRIANGLES, buffers.indexCount, GL_UNSIGNED_INT, 0);
         }
+
         unsigned int createUBO(long long int size_ptr) {
             unsigned int UBO;
             glGenBuffers(1, &UBO);
@@ -172,15 +179,50 @@ namespace Engine {
             //glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
 
+        unsigned int createFBO(unsigned int dataMap) {
+            unsigned int FBO;
+            glGenFramebuffers(1, &FBO);
+            glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dataMap, 0);
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            return FBO;
+        }
+        unsigned int createdepthmap() {
+
+            unsigned int depthMap;
+            glGenTextures(1, &depthMap);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
+                SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            return depthMap;
+        }
+        void generamaptexture(unsigned int map, unsigned int FBO, unsigned int type) {
+            glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D,
+                map, 0);
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+        void BindFBO(unsigned int FBO) {
+            glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+        }
+
 #define ActiveBuffer(Buffer, code) glBindBuffer(GL_UNIFORM_BUFFER, Buffer); code glBindBuffer(GL_UNIFORM_BUFFER, 0)
 
         // texture ...........
-        void createtexture(std::shared_ptr<DATA::TextureData> texturedata) {
+        void createtexture2d(std::shared_ptr<DATA::TextureData> texturedata) {
             glGenTextures(1, &texturedata->id);
             glBindTexture(GL_TEXTURE_2D, texturedata->id);
         }
         bool loadtexture2d(std::shared_ptr<DATA::TextureData> texturedata) {
-            createtexture(texturedata);
+            createtexture2d(texturedata); 
             // set the texture wrapping/filtering options (on currently bound texture)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -189,7 +231,14 @@ namespace Engine {
             // load and generate the texture
             CORE::ImageData images = CORE::Reader::Readimage(texturedata->paths[0]);
             if (images.log.empty()) {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, images.width, images.height, 0, texturedata->nrChannels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, images.pixels);
+                GLenum internalFormat;
+
+                if (images.nrChannels == 4)
+                    internalFormat = texturedata->isLinear ? GL_RGBA8 : GL_SRGB8_ALPHA8;
+                else
+                    internalFormat = texturedata->isLinear ? GL_RGB8 : GL_SRGB8;
+                GLenum format = images.nrChannels == 4 ? GL_RGBA : GL_RGB;
+                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, images.width, images.height, 0, format, GL_UNSIGNED_BYTE, images.pixels); 
                 glGenerateMipmap(GL_TEXTURE_2D);
                 Info(Engine::CORE::LogCategory::API, "Texture loaded successfully: " ,
                     texturedata->paths[0] , " (" , images.width , "x" , images.height , ")");
@@ -204,9 +253,54 @@ namespace Engine {
                 return false;
             }
         }
+
+        void createcubemap(std::shared_ptr<DATA::TextureData> texturedata) {
+            glGenTextures(1, &texturedata->id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, texturedata->id);
+        }
+        bool loadcubemap(std::shared_ptr<DATA::TextureData> texturedata) {
+            createcubemap(texturedata);
+            // set the texture wrapping/filtering options (on currently bound texture)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            // load and generate the texture
+            for (unsigned int i = 0; i < texturedata->paths.size(); i++) {
+                CORE::ImageData images = CORE::Reader::Readimage(texturedata->paths[i], false);
+                if (images.log.empty()) {
+                    GLenum internalFormat;
+
+                    if (images.nrChannels == 4)
+                        internalFormat = texturedata->isLinear ? GL_RGBA8 : GL_SRGB8_ALPHA8;
+                    else
+                        internalFormat = texturedata->isLinear ? GL_RGB8 : GL_SRGB8;
+                    GLenum format = images.nrChannels == 4 ? GL_RGBA : GL_RGB;
+                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, images.width, images.height, 0, format, GL_UNSIGNED_BYTE, images.pixels);
+                    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+                    Info(Engine::CORE::LogCategory::API, "Texture loaded successfully: ",
+                        texturedata->paths[i], " (", images.width, "x", images.height, ")");
+                    CORE::Reader::Freeimage(images);  
+                }
+                else {
+                    Error(Engine::CORE::LogCategory::API, "Texture loaded unsuccessfully: ",
+                        texturedata->paths[i], " (", images.width, "x",
+                        images.height, ")\n", images.log, "\n");
+                    CORE::Reader::Freeimage(images);
+                    return false;
+                }
+            }
+            return true;
+        }
+
         void Bind(std::shared_ptr<DATA::TextureData> texturedata) {
             glActiveTexture(texturedata->unit + GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texturedata->id);
+        }
+        void Bind(unsigned int unit, unsigned int textureID) {
+            glActiveTexture(unit + GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureID);
         }
 
         //
@@ -222,7 +316,7 @@ namespace Engine {
             > value, 
             const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
-            if (loc == -1) {
+            if (loc == -1 and shaderID) {
                 Warn(Engine::CORE::LogCategory::API, "Uniform '" , name , "' not found in shader program " , shaderID);
                 return;
             }

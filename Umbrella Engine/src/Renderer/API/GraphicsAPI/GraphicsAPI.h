@@ -16,13 +16,21 @@ using namespace std;
 
 namespace Engine {
     namespace API {
+        const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
         bool initialize(); // مقداردهی اولیه API
         void shutdown();   // پاکسازی منابع
 
         void setViewport(int x, int y, int width, int height);
         void clearColor(float r, float g, float b, float a);
-        void clearBuffers(); // پاک کردن بافر رنگ و عمق
+        enum Buffers
+        {
+            COLOR = 1 << 0,
+            DEPTH = 1 << 1,
+            STENCIL = 1 << 2,
+            ALL = 7
+        };
+        void clearBuffers(int buffers); // پاک کردن بافر رنگ و عمق
 
         // مدیریت شیدرها
         unsigned int createShader();
@@ -36,15 +44,25 @@ namespace Engine {
         DATA::MeshData createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices);
         void deleteMesh(DATA::MeshData& buffers);
         void drawMesh(DATA::MeshData& buffers, DATA::RenderState state);
+
         unsigned int createUBO(long long int size_ptr);
         void UpdateBuffer(unsigned int UBO, void* data, size_t offset, size_t datasize);
         void BindBuffer(unsigned int UBO, int slotNumber, int offset, int size);
 
+        unsigned int createFBO(unsigned int dataMap);
+        unsigned int createdepthmap();
+        void generamaptexture(unsigned int map, unsigned int FBO, unsigned int type);
+        void BindFBO(unsigned int FBO);
 
         // texture
-        void createtexture(std::shared_ptr<DATA::TextureData> texturedata);
-        bool loadtexture2d(std::shared_ptr<DATA::TextureData> texturedata) ;
+        void createtexture2d(std::shared_ptr<DATA::TextureData> texturedata);
+        bool loadtexture2d(std::shared_ptr<DATA::TextureData> texturedata);
+
+        void createcubemap(std::shared_ptr<DATA::TextureData> texturedata);
+        bool loadcubemap(std::shared_ptr<DATA::TextureData> texturedata);
+
         void Bind(std::shared_ptr<DATA::TextureData> texturedata);
+        void Bind(unsigned int unit, unsigned int textureID);
 
         //
         void SetUniform(

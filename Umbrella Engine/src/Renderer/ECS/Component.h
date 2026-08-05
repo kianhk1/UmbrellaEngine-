@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "../../Core/Data/Data.h"
 
-enum class ProjectionType
+enum ProjectionType
 {
 	Perspective,
 	Orthographic
@@ -42,8 +42,16 @@ public:
 };
 //float CameraComponent::yaw, CameraComponent::pitch;
 bool CameraComponent::firstMouse = true;
+enum LightType {
+	Directional = 0, 
+	Point, 
+	Spot 
+};
 class LightComponent {
 public:
 	int UBO_ID;
 	Engine::DATA::LightData light;
+	unsigned int dephtmao, depthFBO;
+	glm::mat4 lightSpaceMatrix;
+	int type = Point;
 };

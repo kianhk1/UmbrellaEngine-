@@ -3,7 +3,7 @@
 #include "../../Input & Output Manager/Input System/InputSystem.h"
 #include "../Loader/AssetManager.h"
 #include "Entity.h"
-
+#include "../../Scene/Scene.h"
 class SystemManager {
 public:
 
@@ -18,7 +18,9 @@ public:
 
 class RenderSystem : public System {
 public:
+	RenderSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
 	void Start() override {
+		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		view.each(
 			[this](auto entity,
@@ -27,30 +29,38 @@ public:
 					// init mesh
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
+					std::cout << "shader: " << (shaderldata ? "OK" : "NULL")<< render.shader.ID << std::endl;
+					if(modeldata) {
+						for (auto& part : modeldata->parts) {
 
-					for (auto& part : modeldata->parts) {
-						 
-						part.mesh = Engine::API::createMesh(part.mesh.vertices, part.mesh.indices); 
-						Engine::API::setAttrib(part.mesh, 0, 3, 14, 0);
-						Engine::API::setAttrib(part.mesh, 1, 3, 14, 3);
-						Engine::API::setAttrib(part.mesh, 2, 2, 14, 6);
-						Engine::API::setAttrib(part.mesh, 3, 3, 14, 8);
-						Engine::API::setAttrib(part.mesh, 4, 3, 14, 11);
-						for (auto& it : part.material.textures) {
-							Engine::API::SetUniform(shaderldata->programID,
-								Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, "albedoTexture");
-							//Warn(Engine::CORE::LogCategory::API, "sfdsfdsfdsfdf");
+							part.mesh = Engine::API::createMesh(part.mesh.vertices, part.mesh.indices);
+							Engine::API::setAttrib(part.mesh, 0, 3, 14, 0);
+							Engine::API::setAttrib(part.mesh, 1, 3, 14, 3);
+							Engine::API::setAttrib(part.mesh, 2, 2, 14, 6);
+							Engine::API::setAttrib(part.mesh, 3, 3, 14, 8);
+							Engine::API::setAttrib(part.mesh, 4, 3, 14, 11);
+							
+							for (auto& it : part.material.textures) {
+								auto tex = Engine::AssetManager::GetInstance().GetTexture(it.second.ID);
+
+								std::cout << "texture: " << (tex ? "OK" : "NULL") << std::endl;
+
+								Engine::API::SetUniform(shaderldata->programID,
+									Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, it.first.c_str());
+								//Warn(Engine::CORE::LogCategory::API, "sfdsfdsfdsfdf");
+							}
 						}
-					} 
-					modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
-						Warn(Engine::CORE::LogCategory::API, depth ? '|' : '\0', std::string(depth, '-'), depth ? '>' : '\0', node.name);
-						});
+						modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+							Warn(Engine::CORE::LogCategory::API, depth ? '|' : '\0', std::string(depth, '-'), depth ? '>' : '\0', node.name);
+							});
+					}
 		 
 			});
 	}
 	void Update(float dt) override {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
-		
 
 		view.each( 
 			[this](auto entity,
@@ -60,25 +70,31 @@ public:
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
 
 					Engine::API::useShader(*shaderldata);
-					modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
-						Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model"); 
-						
-						
-						for(const int& i : node.meshIndices)
-						{
-							for (const auto& it : modeldata->parts[i].material.textures)
+					updateTransform(transform); 
+					if (modeldata)
+					{
+						modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+							Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model");
+
+
+							for (const int& i : node.meshIndices)
 							{
-								Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(it.second));
+								for (const auto& it : modeldata->parts[i].material.textures)
+								{
+									Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(it.second));
+									Engine::API::SetUniform(shaderldata->programID, Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, it.first.c_str());
+								}
+								for (const auto& it : modeldata->parts[i].material.uniforms)
+								{
+									Engine::API::SetUniform(shaderldata->programID, it.second, it.first.c_str());
+								}
+								if(render.state.shadow)
+									Engine::API::SetUniform(shaderldata->programID, 0, "shadowMap");
+								Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
 							}
-							for (const auto& it : modeldata->parts[i].material.uniforms)
-							{ 
-								
-								Engine::API::SetUniform(shaderldata->programID, it.second, it.first.c_str());
-							}
-							Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
-						}
-						});
-					updateTransform(transform);
+							});
+					}
+					
 					
 			});
 	}
@@ -102,12 +118,14 @@ private:
 		Logger::WARN("z:" + to_string(right.z) + "\n");*/
 
 	}
+	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
 };
 
 class CameraSystem : public System {
 public:
-	CameraSystem(std::shared_ptr<Engine::DATA::windowData> window) : Window(window) {}
+	CameraSystem(std::shared_ptr<Engine::DATA::windowData> window, std::shared_ptr<Engine::Scene::Scene> scene) : Window(window), ActiveScene(scene) {}
 	void Start() override {
+		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, CameraComponent>();
 		
 		view.each(
@@ -135,6 +153,7 @@ public:
 			});
 	}
 	void Update(float dt) override {
+		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, CameraComponent>();
 		
 		view.each(
@@ -210,7 +229,7 @@ private:
 	}
 	void Move(TransformComponent& transform, float dt) {
 
-		float velocity = 2 * dt;
+		float velocity = 0.5 * dt;
 		if (Engine::API::Input::IsKeyPressed(Window,Engine::API::KeyboardKey::KEY_W)) {
 			transform.position += transform.forward * velocity;// جلو
 		}
@@ -232,5 +251,99 @@ private:
 			transform.position -= transform.up * velocity;// پایین 
 		}
 	}
+	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
+};
+
+class LightSystem : public System {
+public:
+	LightSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
+	void Start() override {
+		auto& registry = ActiveScene->Registry();
+		auto view = registry.view<TransformComponent, LightComponent>(); 
+
+		view.each(
+			[this](auto entity,
+				TransformComponent& transform,
+				LightComponent& light) {
+					light.UBO_ID = Engine::API::createUBO(112);
+					Engine::API::BindBuffer(light.UBO_ID, 1, 0, 112);
+
+					light.dephtmao = Engine::API::createdepthmap(); 
+					light.depthFBO = Engine::API::createFBO(light.dephtmao); 
+
+					depthshaderID =
+						Engine::AssetManager::GetInstance().LoadShader("Shader/depth_shader/vertex_depth_shader.glsl",
+																		"Shader/depth_shader/fragment_depth_shader.glsl"); 
+
+					
+			});
+	}
+	void Update(float dt) override {
+		auto& registry = ActiveScene->Registry();
+		auto view = registry.view<TransformComponent, LightComponent>(); 
+
+		view.each(
+			[this, &registry](auto entity,
+				TransformComponent& transform,
+				LightComponent& light) {
+					Engine::API::setViewport(0, 0, Engine::API::SHADOW_WIDTH, Engine::API::SHADOW_HEIGHT);
+
+					glm::vec3 center(0.0);
+					auto viewl = registry.view<TransformComponent, CameraComponent>();
+					viewl.each(
+						[this, &center](auto entity,
+							TransformComponent& transform,
+							CameraComponent& cam) {
+								//glm::vec3 displaycenter(cam.cameradata.windowWidth / 2, cam.cameradata.windowHeight / 2); 
+								//if (cam.ismoving) todo : cam active 
+								center.x += transform.position.x/10;
+								center.z += transform.position.z/10;
+						});
+
+					glm::vec3 lightPos = transform.position;
+					if (light.type == 0)
+						glm::vec3 lightPos = center - transform.position * 20.0f;
+					Warn(Engine::CORE::LogCategory::API, lightPos.x, lightPos.y, lightPos.z); 
+					glm::mat4 lightView = glm::lookAt(lightPos, center, transform.up);
+					glm::mat4 lightProjection;
+					if (light.type == 0) 
+						 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 200.0f);
+					else
+						lightProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 200.0f); 
+					light.lightSpaceMatrix = lightProjection * lightView; 
+
+
+					Engine::API::UpdateBuffer(light.UBO_ID, glm::value_ptr(light.light.lightcolor), 0, sizeof(glm::vec4)); 
+					Engine::API::UpdateBuffer(light.UBO_ID, glm::value_ptr(transform.position), sizeof(glm::vec4), sizeof(glm::vec4)); 
+					Engine::API::UpdateBuffer(light.UBO_ID, glm::value_ptr(light.lightSpaceMatrix), 2*sizeof(glm::vec4), sizeof(glm::mat4));
+					Engine::API::UpdateBuffer(light.UBO_ID, &light.type, 2 * sizeof(glm::vec4) + sizeof(glm::mat4), sizeof(int));
+
+					Engine::API::BindFBO(light.depthFBO);
+					Engine::API::clearBuffers(Engine::API::Buffers::DEPTH);
+					auto viewr = registry.view<TransformComponent, MeshRendererComponent>();
+					viewr.each(
+						[this, light](auto entity,
+							TransformComponent& transform, 
+							MeshRendererComponent& render) {
+								auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
+								auto shaderldata = Engine::AssetManager::GetInstance().GetShader(depthshaderID);
+								Engine::API::useShader(*shaderldata);
+								if (modeldata and render.state.shadow)
+									modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+										Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model");
+										Engine::API::SetUniform(shaderldata->programID, light.lightSpaceMatrix, "lightSpaceMatrix");
+										for (const int& i : node.meshIndices) {
+											Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
+										}
+
+								});
+						});
+					Engine::API::BindFBO(0);
+					Engine::API::Bind(0, light.dephtmao);
+			});
+	}
+private:
+	Engine::DATA::ShaderHandle depthshaderID;
+	std::shared_ptr<Engine::Scene::Scene> ActiveScene; 
 };
 

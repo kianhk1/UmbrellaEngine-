@@ -13,12 +13,15 @@ namespace Engine {
             return NULL;
         }
         auto data = CORE::Reader::ReadModel(path);
-        model->root = data.root; 
-        int i = 0;
+        model->path = path;
+        model->root = data.root;
         for (auto& part : data.parts) {
             DATA::MaterialData material;
-            if(!part.materialdesc.texturedesc.empty())
-                material.textures[i++] = LoadTexture(part.materialdesc.texturedesc);
+            for (auto& texturedesc : part.materialdesc.texturedesc)
+            {
+                material.textures.emplace(texturedesc.first, LoadTexture(texturedesc.second));
+            }
+                
             material.uniforms = part.materialdesc.uniforms;
                 
             DATA::MeshData mesh;

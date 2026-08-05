@@ -1,4 +1,4 @@
-#include "AssetManager.h"
+﻿#include "AssetManager.h"
 
 namespace Engine {
 	DATA::ShaderHandle Engine::AssetManager::LoadShader(const std::string& vertex, const std::string& fragment)
@@ -24,10 +24,18 @@ namespace Engine {
             DATA::ShaderHandle Handle(hash);
             shaders.emplace(Handle.ID, shader);
             Engine::API::useShader(*shader);
+            datas["shader"][std::to_string(hash)] = { vertex ,fragment };
+            std::ofstream filet("Assets/AssetDatabase/Shaders.json");
+            Warn(Engine::CORE::LogCategory::Resource, filet.is_open() ? "yes" : "no");
+            filet << datas.dump(4);
             return Handle;
         }
         else
-            return NULL;
+        {
+            DATA::ShaderHandle Handle(0);
+            Warn(Engine::CORE::LogCategory::Resource, "نهههههههیییسبیسبیسبیسب43455354353");
+            return Handle;
+        }
 	}
 
     std::shared_ptr<DATA::ShaderData> AssetManager::GetShader(DATA::ShaderHandle Handle) {
@@ -36,4 +44,5 @@ namespace Engine {
             return it->second;
         return nullptr;
     }
+    json AssetManager::datas;
 }

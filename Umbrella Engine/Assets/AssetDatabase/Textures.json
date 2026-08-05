@@ -1,0 +1,18 @@
+{
+    "Texture": {
+        "2D": {
+            "10851062276410745978": "Assets/chess_set_board_diff_2k.jpg",
+            "11514881326047092110": "Assets/chess_set_board_nor_gl_2k.jpg",
+            "12145109805116575717": "Assets/chess_set_pieces_white_nor_gl_2k.jpg",
+            "13123101836644770213": "Assets/chess_set_pieces_white_diff_2k.jpg",
+            "16246487868348731623": "Assets/chess_set_pieces_black_diff_2k.jpg",
+            "18376125955051302674": "Assets/chess_set_pieces_black_arm_2k.jpg",
+            "4385888778282709161": "Assets/chess_set_board_arm_2k.jpg",
+            "7838513740297501027": "Assets/chess_set_pieces_black_nor_gl_2k.jpg",
+            "9464096470990571840": "Assets/chess_set_pieces_white_arm_2k.jpg"
+        },
+        "CubeMap": {
+            "14945172872186919380": "Assets/skybox/skybox.json"
+        }
+    }
+}

@@ -32,20 +32,21 @@ namespace Engine {
         struct TextureHandle
         {
             TextureHandle() = default;
-            TextureHandle(uint32_t id) : ID(id) {}
-            uint32_t ID = 0;
+            TextureHandle(uint64_t id) : ID(id) {}
+            uint64_t ID = 0;
         };
         struct ShaderHandle
         {
             ShaderHandle() = default;
-            ShaderHandle(uint32_t id) : ID(id) {}
-            uint32_t ID = 0;
+            ShaderHandle(uint64_t id) : ID(id) {}
+            uint64_t ID = 0;
         };
         struct ModelHandle
         {
             ModelHandle() = default;
-            ModelHandle(uint32_t id) : ID(id) {}
-            uint32_t ID = 0;
+            ModelHandle(uint64_t id) : ID(id) {}
+            uint64_t ID = 0;
+            
         };
 
         struct LightData {
@@ -81,6 +82,10 @@ namespace Engine {
             std::vector<unsigned int> indices;
         };
 
+        struct TextureDesc {
+            std::vector<std::string> paths;
+            bool isLinear = true;
+        };
         struct TextureData {
             std::vector<std::string> paths;
             TextureType type;
@@ -89,6 +94,7 @@ namespace Engine {
             uint32_t Height;
             int unit;
             int nrChannels;
+            bool isLinear = true;
         };
         enum class UniformType
         {
@@ -102,6 +108,9 @@ namespace Engine {
         struct RenderState
         {
             bool depthtest = true;
+            bool shadow = true;
+            bool isTransparent = false;
+            int depthfunc = 0x0201;
         };
         using Uniform = std::variant<
             int,
@@ -113,7 +122,7 @@ namespace Engine {
         >;
         struct MaterialData {
             std::unordered_map<
-                uint32_t,
+                std::string,
                 TextureHandle
             > textures;
             std::unordered_multimap<std::string, Uniform> uniforms;
@@ -148,8 +157,18 @@ namespace Engine {
         };
         struct ModelData
         {
+            std::string path;
             std::shared_ptr<DATA::Node> root;
             std::vector<ModelPart> parts; 
+            ModelPart& GetMaterial(uint32_t index)
+            {
+                return parts[index];
+            }
+
+            const ModelPart& GetMaterial(uint32_t index) const
+            {
+                return parts[index];
+            }
         };
 
         struct Size { int width; int height; };
@@ -218,10 +237,6 @@ namespace Engine {
         struct ShaderDesc
         {
             std::string path_Vertex_Shader, path_Fragment_Shader;
-        };
-        struct TextureDesc
-        {
-            std::vector<std::string> paths;
         };
     }
 }

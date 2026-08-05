@@ -1,0 +1,252 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v5.1.20",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "small_plastic_torch"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "small_plastic_torch",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "small_plastic_torch_glass",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicRoughnessTexture": {
+          "index": 4
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plastic Torch",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        },
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "small_plastic_torch_nor_gl",
+      "uri": "textures/small_plastic_torch_nor_gl_2k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "small_plastic_torch_diff",
+      "uri": "textures/small_plastic_torch_diff_2k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "small_plastic_torch_metal-small_plastic_torch_rough",
+      "uri": "textures/small_plastic_torch_arm_2k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "small_plastic_torch_diff-small_plastic_torch_alpha",
+      "uri": "textures/small_plastic_torch_diff_2k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8181,
+      "max": [
+        0.07224811613559723,
+        0.02752537839114666,
+        0.11509314179420471
+      ],
+      "min": [
+        -0.02752535790205002,
+        -0.027525344863533974,
+        -0.11238280683755875
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 8181,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 8181,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 39468,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0190066397190094,
+        0.01900666020810604,
+        0.11211542040109634
+      ],
+      "min": [
+        -0.019006632268428802,
+        -0.019006621092557907,
+        0.11196611821651459
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 65,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 65,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 288,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 98172,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 98172,
+      "byteOffset": 98172,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 65448,
+      "byteOffset": 196344,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 78936,
+      "byteOffset": 261792,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 340728,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 341508,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 520,
+      "byteOffset": 342288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 576,
+      "byteOffset": 342808,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 343384,
+      "uri": "small_plastic_torch.bin"
+    }
+  ]
+}

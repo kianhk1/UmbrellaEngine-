@@ -4,7 +4,8 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
-
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 /*std::filesystem::exists()
 std::filesystem::remove()
 std::filesystem::copy()
@@ -170,7 +171,7 @@ namespace Engine {
                 std::error_code ec;
                 auto entries = std::filesystem::recursive_directory_iterator(path, options, ec);
                 if (ec) {
-                    std::cerr << "Failed to get files: " << path << "\nReason:" << ec.message() << std::endl;
+                    //std::cerr << "Failed to get files: " << path << "\nReason:" << ec.message() << std::endl;
                     return pathfiles;
                 }
                 for (const auto& entry : entries) {

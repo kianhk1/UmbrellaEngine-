@@ -17,9 +17,13 @@ namespace Engine {
     };
 	class AssetManager {
 	public:
-        DATA::TextureHandle LoadTexture(const std::vector<std::string>& paths);
-        std::vector<DATA::TextureHandle> M_LoadTexture(const std::vector<std::string>& path);
-        DATA::TextureHandle LoadTexture(const std::string& path);
+        AssetManager() {
+            //for (auto& path : CORE::FileSystem::GetFiles("As/sets/Scene")){}
+        }
+        DATA::TextureHandle LoadCubeMap(const std::vector<std::string>& paths);
+        DATA::TextureHandle LoadCubeMap(const std::string paths);
+        std::vector<DATA::TextureHandle> M_LoadTexture(const std::vector<DATA::TextureDesc>& path);
+        DATA::TextureHandle LoadTexture(const DATA::TextureDesc& path); 
         std::shared_ptr<DATA::TextureData> GetTexture(DATA::TextureHandle Handle);
 
         DATA::ShaderHandle LoadShader(
@@ -35,25 +39,26 @@ namespace Engine {
             return instance;
         }
 	private:
-		AssetManager() = default;
+		//AssetManager() = default;
 
         std::unordered_map<
-            uint32_t,
+            uint64_t,
             std::shared_ptr<DATA::TextureData>
         > textures;
 
         std::unordered_map<
-            uint32_t,
+            uint64_t,
             std::shared_ptr<DATA::ShaderData>
         > shaders;
 
         std::unordered_map<
-            uint32_t,
+            uint64_t,
             std::shared_ptr<DATA::ModelData>
         > models;
-      //  static uint32_t NextTextureHandle;
+       static uint32_t NextTextureHandle;
     public:
-
+        static json datat;
+        static json datas;
         bool operator==(const AssetManager& other) const = default;
     };
 }

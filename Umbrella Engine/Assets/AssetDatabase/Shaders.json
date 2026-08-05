@@ -1,0 +1,16 @@
+{
+    "shader": {
+        "17691298349109109709": [
+            "Shader/skybox_shader/vertex_skybox_shader.glsl",
+            "Shader/skybox_shader/fragment_skybox_shader.glsl"
+        ],
+        "17918514560209468517": [
+            "Shader/depth_shader/vertex_depth_shader.glsl",
+            "Shader/depth_shader/fragment_depth_shader.glsl"
+        ],
+        "17977687944850048621": [
+            "Shader/vertex_shader.glsl",
+            "Shader/fragment_shader.glsl"
+        ]
+    }
+}

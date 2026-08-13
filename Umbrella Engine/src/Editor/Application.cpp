@@ -143,7 +143,7 @@ namespace Engine {
 
 			RenderSystem sys(scene);
 			CameraSystem ccc(win, scene);
-			LightSystem ll(scene);
+			LightSystem ll(win, scene);
 			m_Running = true;
 
 			ImGuiIO& io = ImGui::GetIO();

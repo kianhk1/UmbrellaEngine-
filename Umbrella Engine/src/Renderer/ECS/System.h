@@ -263,7 +263,7 @@ private:
 
 class LightSystem : public System {
 public:
-	LightSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
+	LightSystem(std::shared_ptr<Engine::DATA::windowData> window, std::shared_ptr<Engine::Scene::Scene> scene) : Window(window), ActiveScene(scene) {}
 	void Start() override {
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, LightComponent>(); 
@@ -347,10 +347,12 @@ public:
 						});
 					Engine::API::BindFBO(0);
 					Engine::API::Bind(0, light.dephtmao);
+					Engine::API::setViewport(0, 0, Window->display.width, Window->display.height);
 			});
 	}
 private:
 	Engine::DATA::ShaderHandle depthshaderID;
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene; 
+	std::shared_ptr<Engine::DATA::windowData> Window;
 };
 

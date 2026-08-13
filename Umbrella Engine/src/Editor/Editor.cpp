@@ -147,7 +147,7 @@ namespace Engine {
 		{
 			ApplicationSpecification spec;
 			spec.Name = "Umbrella Engine";
-			spec.windowapp = Engine::API::InitWindow(800, 600, "Umbrella Engine");
+			spec.windowapp = Engine::API::InitWindow(1600, 900, "Umbrella Engine");
 
 			Application* app = new Application(spec);
 			app->PushLayer<ExampleLayer>();

@@ -8,6 +8,7 @@
 #include <variant>
 #include <unordered_map>
 #include <entt/entt.hpp>
+#include "../../Editor/ImGui/imgui.h"
 /*#define GL_NEVER 0x0200
 #define GL_LESS 0x0201
 #define GL_EQUAL 0x0202
@@ -229,6 +230,16 @@ namespace Engine {
                     line == other.line;
             }
 
+        };
+        struct ConsoleSegment
+        {
+            std::string text;
+            ImVec4 color;
+        };
+
+        struct ConsoleLine
+        {
+            std::vector<ConsoleSegment> segments;
         };
 
         struct Payload {

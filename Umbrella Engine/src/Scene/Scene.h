@@ -317,6 +317,10 @@ namespace Engine {
                 return scene;
             }
 
+            std::shared_ptr<Scene> GetActivescene() {
+                return ActiveScene;
+            }
+
             static SceneManager& GetInstance() {
                 static SceneManager scenemanager;
                 return scenemanager;

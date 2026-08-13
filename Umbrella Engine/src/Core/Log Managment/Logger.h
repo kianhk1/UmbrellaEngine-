@@ -38,6 +38,29 @@ namespace Engine{
             Audio, 
             Physics 
         };
+        class ConsoleBuffer : public std::streambuf
+        {
+        public:
+
+            std::string buffer;
+            std::vector<std::string> lines;
+
+        protected:
+            int overflow(int c) override
+            {
+                if (c == '\n')
+                {
+                    lines.push_back(buffer);
+                    buffer.clear();
+                }
+                else
+                {
+                    buffer += static_cast<char>(c);
+                }
+
+                return c;
+            }
+        };
         class Logger {
         public:
             static void log(LogLevel level, uint32_t& line, string& file, LogCategory& category, string message);
@@ -58,6 +81,11 @@ namespace Engine{
                 log(LogLevel::FATAL, line, file, category, ToString(std::forward<Args>(args)...));
             }
             static void Flush();
+
+            
+
+            static ConsoleBuffer consolebuffer;
+
         private:
             static string levelToString(LogLevel level);
             static string currentTime();

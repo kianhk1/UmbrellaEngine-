@@ -29,6 +29,7 @@ public:
 	Engine::DATA::ModelHandle modelhandle;
 	Engine::DATA::ShaderHandle shader;
 	Engine::DATA::RenderState state;
+
 };
 class CameraComponent {
 public:
@@ -37,11 +38,9 @@ public:
 	int UBO_ID;
 	float sensitivity = 0.1f;
 	float yaw, pitch;
-	static bool firstMouse;
+	bool firstMouse;
 	bool ismoving = true;
 };
-//float CameraComponent::yaw, CameraComponent::pitch;
-bool CameraComponent::firstMouse = true;
 enum LightType {
 	Directional = 0, 
 	Point, 

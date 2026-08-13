@@ -179,13 +179,20 @@ namespace Engine {
             //glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
 
-        unsigned int createFBO(unsigned int dataMap) {
+        unsigned int createFBO(unsigned int dataMap ,int type) {
             unsigned int FBO;
             glGenFramebuffers(1, &FBO);
             glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dataMap, 0);
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
+            if(type == GL_COLOR_ATTACHMENT0){
+                glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D, dataMap, 0);
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                glReadBuffer(GL_COLOR_ATTACHMENT0);
+            }
+            else if (type == GL_DEPTH_ATTACHMENT) {
+                glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D, dataMap, 0);
+                glDrawBuffer(GL_NONE);
+                glReadBuffer(GL_NONE);
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             return FBO;
         }
@@ -202,12 +209,45 @@ namespace Engine {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             return depthMap;
         }
-        void generamaptexture(unsigned int map, unsigned int FBO, unsigned int type) {
+        unsigned int createcolorhmap() {
+
+            unsigned int colorMap;
+            glGenTextures(1, &colorMap);
+            glBindTexture(GL_TEXTURE_2D, colorMap);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SHADOW_WIDTH,
+                SHADOW_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            return colorMap; 
+        }
+        void generamaptexture(
+            unsigned int map,
+            unsigned int FBO,
+            unsigned int type)
+        {
             glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D,
-                map, 0);
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                type,
+                GL_TEXTURE_2D,
+                map,
+                0
+            );
+
+            if (type == GL_COLOR_ATTACHMENT0)
+            {
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                glReadBuffer(GL_COLOR_ATTACHMENT0);
+            }
+            else if (type == GL_DEPTH_ATTACHMENT)
+            {
+                glDrawBuffer(GL_NONE);
+                glReadBuffer(GL_NONE);
+            }
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
         void BindFBO(unsigned int FBO) {

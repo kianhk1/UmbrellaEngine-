@@ -49,8 +49,9 @@ namespace Engine {
         void UpdateBuffer(unsigned int UBO, void* data, size_t offset, size_t datasize);
         void BindBuffer(unsigned int UBO, int slotNumber, int offset, int size);
 
-        unsigned int createFBO(unsigned int dataMap);
+        unsigned int createFBO(unsigned int dataMap, int type);
         unsigned int createdepthmap();
+        unsigned int createcolorhmap();
         void generamaptexture(unsigned int map, unsigned int FBO, unsigned int type);
         void BindFBO(unsigned int FBO);
 

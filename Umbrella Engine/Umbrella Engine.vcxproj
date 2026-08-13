@@ -142,11 +142,22 @@
   <ItemGroup>
     <ClCompile Include="NewFolder1\FileName.cpp" />
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
+    <ClCompile Include="src\Editor\Application.cpp" />
+    <ClInclude Include="src\Editor\ImGui\imconfig.h" />
+    <ClInclude Include="src\Editor\ImGui\imgui.h" />
+    <ClInclude Include="src\Editor\ImGui\ImGuiBuild.h" />
+    <ClCompile Include="src\Editor\ImGui\imgui.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="src\Editor\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Editor\Random.cpp" />
     <ClCompile Include="src\Input &amp; Output Manager\Input System\openglInput.cpp" />
     <ClCompile Include="src\Renderer\Loader\ModelLoader.cpp" />
     <ClCompile Include="src\Renderer\Loader\ShaderLoader.cpp" />
     <ClCompile Include="src\Renderer\Loader\TextureLoader.cpp" />
-    <ClCompile Include="Umbrella Engine.cpp" />
     <ClCompile Include="vendor\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +167,19 @@
     <ClInclude Include="src\Core\Hash\HashMaker.h" />
     <ClInclude Include="src\Core\Log Managment\Logger.h" />
     <ClInclude Include="src\Core\Memory Management\Memory Management.h" />
+    <ClInclude Include="src\Editor\Application.h" />
+    <ClCompile Include="src\Editor\Editor.cpp" />
+    <ClCompile Include="src\Editor\EntryPoint.cpp" />
+    <ClInclude Include="src\Editor\ImGui\imgui_impl_glfw.h" />
+    <ClInclude Include="src\Editor\ImGui\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\Editor\ImGui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\Editor\ImGui\imgui_internal.h" />
+    <ClInclude Include="src\Editor\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="src\Editor\ImGui\imstb_textedit.h" />
+    <ClInclude Include="src\Editor\ImGui\imstb_truetype.h" />
+    <ClInclude Include="src\Editor\Layer.h" />
+    <ClInclude Include="src\Editor\Random.h" />
+    <ClInclude Include="src\Editor\Timer.h" />
     <ClInclude Include="src\Event Manager\EventManager.h" />
     <ClInclude Include="src\Input &amp; Output Manager\Input &amp; Output File\FileSystem.h" />
     <ClInclude Include="src\Input &amp; Output Manager\Input &amp; Output File\ReadFile.h" />

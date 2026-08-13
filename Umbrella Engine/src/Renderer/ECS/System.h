@@ -22,10 +22,13 @@ public:
 	void Start() override {
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
+		colormap = Engine::API::createcolorhmap();
+		colorFBO = Engine::API::createFBO(colormap, GL_COLOR_ATTACHMENT0);
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,
 				MeshRendererComponent& render){
+					
 					// init mesh
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
@@ -58,18 +61,19 @@ public:
 			});
 	}
 	void Update(float dt) override {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
-
+		Engine::API::clearBuffers(Engine::API::Buffers::COLOR);
+		///Engine::API::BindFBO(colorFBO);
 		view.each( 
 			[this](auto entity,
 				TransformComponent& transform, 
 				MeshRendererComponent& render) { 
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
-
+					
 					Engine::API::useShader(*shaderldata);
+					
 					updateTransform(transform); 
 					if (modeldata)
 					{
@@ -97,6 +101,8 @@ public:
 					
 					
 			});
+		///Engine::API::BindFBO(0);
+		///Engine::API::Bind(1, colormap);
 	}
 private:
 	void updateTransform(TransformComponent& transform) {
@@ -119,6 +125,7 @@ private:
 
 	}
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
+	unsigned int colormap, colorFBO;
 };
 
 class CameraSystem : public System {
@@ -269,7 +276,7 @@ public:
 					Engine::API::BindBuffer(light.UBO_ID, 1, 0, 112);
 
 					light.dephtmao = Engine::API::createdepthmap(); 
-					light.depthFBO = Engine::API::createFBO(light.dephtmao); 
+					light.depthFBO = Engine::API::createFBO(light.dephtmao, GL_DEPTH_ATTACHMENT);
 
 					depthshaderID =
 						Engine::AssetManager::GetInstance().LoadShader("Shader/depth_shader/vertex_depth_shader.glsl",

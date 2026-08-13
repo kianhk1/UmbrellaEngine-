@@ -174,5 +174,6 @@ namespace Engine {
         std::vector<DATA::LogMessageData> Logger::oldLogs;
         std::mutex Logger::LogMutex;
         std::queue<DATA::LogMessageData> Logger::LogQueue;
+        ConsoleBuffer Logger::consolebuffer;
     }
 }

@@ -3,7 +3,7 @@
 namespace Engine {
 	namespace Editor {
 
-		class ExampleLayer : public Layer
+		class ConsoleLayer : public Layer
 		{
 		public:
 			void OnAttach() override
@@ -30,8 +30,6 @@ namespace Engine {
                     DrawConsoleLine(line);
                 }
 				ImGui::End();
-
-				ImGui::ShowDemoWindow();
 			}
             DATA::ConsoleLine ParseANSI(const std::string& input)
             {
@@ -143,14 +141,133 @@ namespace Engine {
             }
 		};
 
+        class hLayer : public Layer
+        {
+        public:
+            void OnAttach() override
+            {
+                activescene = Scene::SceneManager::GetInstance().GetActivescene();
+                auto& storage = activescene->Registry().storage<entt::entity>();
+                for (auto entity : storage.each())
+                {
+                    entities.push_back(std::get<0>(entity));
+                }
+                
+            }
+
+            void OnDetach() override
+            {
+                
+            }
+
+            void OnUpdate(float ts) override
+            {
+                
+            }
+
+            void OnUIRender() override
+            {
+                ImGui::Begin("entities");
+
+                for (auto entity : entities)
+                {
+                    if (ImGui::Selectable(to_string(static_cast<int>(entity)).c_str()))
+                        activeentity = entity; 
+                }
+
+                ImGui::End();
+
+                ImGui::Begin("component");
+
+                if(activescene->Registry().all_of<TransformComponent>(activeentity)){
+                    auto& transform = activescene->Registry().get<TransformComponent>(activeentity);
+
+                    if (ImGui::CollapsingHeader("TransformComponent"))
+                    {
+                        ImGui::Text("Position:");
+                        ImGui::SameLine();
+                        ImGui::DragFloat3(
+                            "##Position:",
+                            glm::value_ptr(transform.position),
+                            0.1f
+                        );
+                        ImGui::Text("Rotate:");
+                        ImGui::SameLine();
+                        ImGui::DragFloat3(
+                            "##Rotate:",
+                            glm::value_ptr(transform.rotation),
+                            0.1f
+                        );
+                        ImGui::Text("Scale:");
+                        ImGui::SameLine();
+                        ImGui::DragFloat3(
+                            "##Scale:",
+                            glm::value_ptr(transform.scale),
+                            0.1f
+                        );  
+                    }
+                    //ImGui::EndMenu();
+                }
+                if(activescene->Registry().all_of<CameraComponent>(activeentity)){
+                    auto& camera = activescene->Registry().get<CameraComponent>(activeentity);
+
+                    if (ImGui::CollapsingHeader("CameraComponent"))
+                    {
+                        ImGui::Text("sensitivity:");
+                        ImGui::SameLine();
+                        ImGui::DragFloat(
+                            "##sensitivity:",
+                            &camera.sensitivity,
+                            0.1f
+                        );
+                        auto tt = camera.type;
+                        ImGui::RadioButton("Perspective", &camera.type, 0);
+                        ImGui::SameLine();
+                        ImGui::RadioButton("Orthographic", &camera.type, 1);
+                        if (tt != camera.type)
+                            camera.dirty = true;
+                        //....
+                        //....
+                        
+                    }
+                    //ImGui::EndMenu();
+                }
+                if (activescene->Registry().all_of<LightComponent>(activeentity))
+                {
+                    auto& light = activescene->Registry().get<LightComponent>(activeentity);
+
+                    if (ImGui::CollapsingHeader("LightComponent"))
+                    {
+                        ImGui::ColorEdit3(
+                            "Color",
+                            glm::value_ptr(light.light.lightcolor)
+                        );
+
+                        ImGui::Checkbox(
+                            "Shadow",
+                            &light.shadow
+                        );
+                    }
+                }
+                ImGui::End();
+            }
+        private:
+            Entity activeentity;
+            std::vector<entt::entity> entities;
+            std::shared_ptr<Scene::Scene> activescene;
+        };
+
 		Application* CreateApplication(int argc, char** argv)
 		{
+
 			ApplicationSpecification spec;
 			spec.Name = "Umbrella Engine";
 			spec.windowapp = Engine::API::InitWindow(1600, 900, "Umbrella Engine");
+            
 
 			Application* app = new Application(spec);
-			app->PushLayer<ExampleLayer>();
+			app->PushLayer<ConsoleLayer>(); 
+            app->PushLayer<hLayer>();
 			app->SetMenubarCallback([app]()
 				{
 					if (ImGui::BeginMenu("File"))
@@ -159,6 +276,11 @@ namespace Engine {
 						{
 							app->Close();
 						}
+                        if (ImGui::MenuItem("Save"))
+                        {
+                            auto activescene = Scene::SceneManager::GetInstance().GetActivescene();
+                            Event::EventManager::GetInstance().Broadcast("savescene", &activescene);
+                        }
 						ImGui::EndMenu();
 					}
 				});

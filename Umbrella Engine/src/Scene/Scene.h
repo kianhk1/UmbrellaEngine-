@@ -33,6 +33,7 @@ namespace Engine {
         class SceneManager {
         public:
             SceneManager() {
+                
                 std::ifstream filet("Assets/AssetDatabase/Textures.json");
                 std::ifstream files("Assets/AssetDatabase/Shaders.json");
                 if (filet.is_open() and files.is_open()) 
@@ -151,84 +152,7 @@ namespace Engine {
                 ActiveScene = scene;
             }
             bool Save() {
-                json data;
-                data["Scene name:"] = ActiveScene->GetName();
-                data["isActive"] = ActiveScene->isActive;
-                auto& registry = ActiveScene->Registry();
-
-                auto transformview = registry.view<TransformComponent>();
-                transformview.each([&](auto entity,
-                    TransformComponent& transform) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["transform"] = {
-                            {"position", {transform.position.x, transform.position.y, transform.position.z}},
-                            {"rotation", {transform.rotation.x, transform.rotation.y, transform.rotation.z}},
-                            {"scale", {transform.scale.x, transform.scale.y, transform.scale.z}},
-                            {"forward", {transform.forward.x, transform.forward.y, transform.forward.z}}};
-
-                    });
-
-                auto Rendererview = registry.view<MeshRendererComponent>();
-                Rendererview.each([&](auto entity, MeshRendererComponent& Renderer) {
-                    auto model = AssetManager::GetInstance().GetModel(Renderer.modelhandle);
-
-                    // ساختار اصلاح شده
-                    data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"] = {
-                        {"modelpath", model->path}, // کلمه paht اصلاح شد
-                        {"stat", {
-                            {"depthtest", Renderer.state.depthtest},
-                            {"shadow", Renderer.state.shadow},
-                            {"depthfunc", Renderer.state.depthfunc}
-                        }}
-                    };
-
-                    auto& shaders = shaderDatabase["shader"][to_string(Renderer.shader.ID)];
-                    for (auto& shader : shaders)  
-                    {
-                        data["entities"][std::to_string(entt::to_integral(entity))]
-                            ["component"]["MeshRenderer"]["shader"]
-                            .push_back(shader);
-                    }
-                    // ذخیره صحیح بافت‌های 2D و CubeMap (حذف and false)
-                    for (auto& part : model->parts) {
-                        for (auto& texture : part.material.textures) {
-                            auto id = std::to_string(texture.second.ID);
-
-                            if (textureDatabase["Texture"]["CubeMap"].contains(id)) {
-                                data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"]["Texture"]
-                                    .push_back(textureDatabase["Texture"]["CubeMap"][id]);
-                            }
-                            if (textureDatabase["Texture"]["2D"].contains(id) and false) { // شرط false برداشته شد
-                                data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"]["Texture"]
-                                    .push_back(textureDatabase["Texture"]["2D"][id]);
-                            }
-                        }
-                    }
-                    });
-
-                auto Cameraview = registry.view<CameraComponent>();
-                Cameraview.each([&](auto entity,
-                    CameraComponent& Camera) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["Camera"] = {
-                            {"cameraTarget", {Camera.cameradata.cameraTarget.x,Camera.cameradata.cameraTarget.y,Camera.cameradata.cameraTarget.z}},
-                            {"cameratype", Camera.type},
-                            {"firstMouse", Camera.firstMouse},
-                            {"ismoving", Camera.ismoving},
-                            {"fov", Camera.cameradata.fov} };
-                    });
-
-                auto Lightview = registry.view<LightComponent>();
-                Lightview.each([&](auto entity,
-                    LightComponent& Light) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["Light"] = {
-                            {"lightcolor", {Light.light.lightcolor.x,Light.light.lightcolor.y,Light.light.lightcolor.z}},
-                            {"lighttype", Light.type} };
-                    });
-
-                std::ofstream file("Assets/Scene/" + ActiveScene->GetName() + ".json");
-                if (!file.is_open())
-                    return false;
-                file << data.dump(4);
-                return true;
+                return Save(ActiveScene); 
             }
             bool Save(std::shared_ptr<Scene> scene) {
                 json data;
@@ -261,6 +185,13 @@ namespace Engine {
                         }}
                     };
 
+                    auto& shaders = shaderDatabase["shader"][to_string(Renderer.shader.ID)];
+                    for (auto& shader : shaders)
+                    {
+                        data["entities"][std::to_string(entt::to_integral(entity))]
+                            ["component"]["MeshRenderer"]["shader"]
+                            .push_back(shader);
+                    }
                     // ذخیره صحیح بافت‌های 2D و CubeMap (حذف and false)
                     for (auto& part : model->parts) {
                         for (auto& texture : part.material.textures) {
@@ -310,10 +241,12 @@ namespace Engine {
             std::shared_ptr<Scene> Creat(std::string name) {
                 for (auto& scene : Scenes) {
                     if (scene->GetName() == name)
+                        Load(scene);
                         return scene;
                 }
                 std::shared_ptr<Scene> scene = std::make_shared<Scene>(name);
-                Scenes.push_back(scene);
+                ActiveScene = scene; 
+                Scenes.push_back(scene); 
                 return scene;
             }
 

@@ -4,6 +4,64 @@
 #include "../Loader/AssetManager.h"
 #include "Entity.h"
 #include "../../Scene/Scene.h"
+
+class ObjCube
+{
+public:
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path) {
+		auto& registry = scene->Registry();
+		entity = registry.create();
+		TransformComponent t;
+		MeshRendererComponent m;
+		m.modelhandle =
+			Engine::AssetManager::GetInstance().LoadModel(path);
+		t.scale = glm::vec3(1.0);
+		m.shader =
+			Engine::AssetManager::GetInstance().LoadShader("Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
+		registry.emplace<TransformComponent>(entity, t);
+		registry.emplace<MeshRendererComponent>(entity, m);
+	}
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, int x, int y, int z) {
+		auto& registry = scene->Registry();
+		entity = registry.create();
+		TransformComponent t;
+		t.position = glm::vec3(x, y, z);
+		LightComponent l;
+		l.light.lightcolor = glm::vec3(1.0);
+		l.type = Directional;
+		MeshRendererComponent m;
+		m.modelhandle =
+			Engine::AssetManager::GetInstance().LoadModel("Assets/cube.gltf");
+		t.scale = glm::vec3(3.0);
+		m.shader =
+			Engine::AssetManager::GetInstance().LoadShader("Shader/vertex_shader.glsl", "Shader/fragment_shader.glsl");
+		registry.emplace<TransformComponent>(entity, t);
+		registry.emplace<LightComponent>(entity, l);
+		//registry.emplace<MeshRendererComponent>(Entity, m); 
+	}
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path, int a) {
+		auto& registry = scene->Registry();
+		entity = registry.create();
+		TransformComponent t;
+		MeshRendererComponent m;
+		m.modelhandle =
+			Engine::AssetManager::GetInstance().LoadModel("Assets/cube.gltf");
+		t.scale = glm::vec3(3.0);
+		m.shader =
+			Engine::AssetManager::GetInstance().LoadShader("Shader/skybox_shader/vertex_skybox_shader.glsl", "Shader/skybox_shader/fragment_skybox_shader.glsl");
+		//Engine::AssetManager::GetInstance().GetModel(m.modelhandle)->GetMaterial(0).material.uniforms.clear();
+		Engine::AssetManager::GetInstance().GetModel(m.modelhandle)->GetMaterial(0).material.textures.emplace("skybox", Engine::AssetManager::GetInstance().LoadCubeMap(path));
+		//m.state.depthtest = false;
+		m.state.shadow = false;
+		m.state.depthfunc = GL_LEQUAL;
+		registry.emplace<TransformComponent>(entity, t);
+		registry.emplace<MeshRendererComponent>(entity, m);
+	}
+	Entity entity;
+private:
+
+};
+
 class SystemManager {
 public:
 
@@ -32,7 +90,6 @@ public:
 					// init mesh
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
-					std::cout << "shader: " << (shaderldata ? "OK" : "NULL")<< render.shader.ID << std::endl;
 					if(modeldata) {
 						for (auto& part : modeldata->parts) {
 
@@ -45,8 +102,6 @@ public:
 							
 							for (auto& it : part.material.textures) {
 								auto tex = Engine::AssetManager::GetInstance().GetTexture(it.second.ID);
-
-								std::cout << "texture: " << (tex ? "OK" : "NULL") << std::endl;
 
 								Engine::API::SetUniform(shaderldata->programID,
 									Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, it.first.c_str());
@@ -78,7 +133,7 @@ public:
 					if (modeldata)
 					{
 						modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
-							Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model");
+							Engine::API::SetUniform(shaderldata->programID, transform.modelMatrix * node.localTransform, "model");
 
 
 							for (const int& i : node.meshIndices)
@@ -162,35 +217,45 @@ public:
 	void Update(float dt) override {
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, CameraComponent>();
-		
+		static bool wasCameraControl = true;
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,
 				CameraComponent& cam) {
-					if (cam.ismoving) {
+
+					if (cam.isactive) {
+						if (!Window->hidecursor && !wasCameraControl) 
+						{
+							cam.firstMouse = true;
+							cam.ismoving = false;
+							wasCameraControl = true;
+
+							Warn(Engine::CORE::LogCategory::API, cam.firstMouse ? "true" : "false");
+							Warn(Engine::CORE::LogCategory::API, "x", Window->mousepos.x,"y", Window->mousepos.y); 
+						}
+						else if (Window->hidecursor && wasCameraControl)
+						{
+							wasCameraControl = false;
+							cam.ismoving = true;
+							Warn(Engine::CORE::LogCategory::API, "x", Window->mousepos.x, "y", Window->mousepos.y);
+						}
+
 						Engine::Event::EventManager::GetInstance().Subscribe("windowresize", [&](void* d) {
 							auto* size = static_cast<Engine::DATA::Size*>(d);
 							cam.cameradata.AspectRatio = static_cast<float>(size->width) / size->height;
-							std::cout << "aa:" << cam.cameradata.AspectRatio << '\n';
-							switch (cam.type)
-							{
-							case ProjectionType::Perspective:
-								cam.cameradata.projection = glm::perspective(glm::radians(cam.cameradata.fov), 
-																			cam.cameradata.AspectRatio, cam.cameradata.NCP, cam.cameradata.FCP);
-								break;
-							case ProjectionType::Orthographic:
-								cam.cameradata.projection = glm::ortho(0.0f, static_cast<float>(size->width), 
-																		0.0f, static_cast<float>(size->height), -1.0f, 1.0f);
-								break;
-							default:
-								break;
-							}
+							cam.cameradata.windowWidth = size->width; 
+							cam.cameradata.windowHeight = size->height;
+							cam.dirty = true;
 							});
 						
+						CamUpdate(cam);
 
-						UpdateCameraRotation(cam, Window);
+						if (cam.ismoving) {
+							UpdateCameraRotation(cam, Window);
+							Move(transform, 0.1);
+						}
 
-						glm::vec3 direction;
+						glm::vec3 direction{};
 						direction.x = cos(glm::radians(cam.yaw)) * cos(glm::radians(cam.pitch));
 						direction.y = sin(glm::radians(cam.pitch));
 						direction.z = sin(glm::radians(cam.yaw)) * cos(glm::radians(cam.pitch));
@@ -204,7 +269,7 @@ public:
 						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(cam.cameradata.view), sizeof(glm::mat4), sizeof(glm::mat4));
 						Engine::API::UpdateBuffer(cam.UBO_ID, glm::value_ptr(transform.position), 2 * sizeof(glm::mat4), sizeof(glm::vec4));
 
-						Move(transform, 0.1);
+						
 					}
 			});
 	}
@@ -212,27 +277,44 @@ private:
 	std::shared_ptr<Engine::DATA::windowData> Window;
 	void UpdateCameraRotation(CameraComponent& cam, std::shared_ptr<Engine::DATA::windowData> window) {
 
-		static float lastX = window->display.width/2, lastY = window->display.height / 2;
+		static float lastX = window->display.width/2.f, lastY = window->display.height / 2.f;
 
 		if (cam.firstMouse)
 		{
 			lastX = window->mousepos.x;
 			lastY = window->mousepos.y;
 			cam.firstMouse = false;
+			return;
 		}
-		float xoffset = window->mousepos.x - lastX;
+		float xoffset = window->mousepos.x - lastX; 
 		float yoffset = lastY - window->mousepos.y;
-		lastX = window->mousepos.x;
-		lastY = window->mousepos.y;
-		float sensitivity = 0.1f;
-		xoffset *= sensitivity;
-		yoffset *= sensitivity;
+		xoffset *= cam.sensitivity;
+		yoffset *= cam.sensitivity;
 		cam.yaw += xoffset;
 		cam.pitch += yoffset;
 		if (cam.pitch > 89.0f)
 			cam.pitch = 89.0f;
 		if (cam.pitch < -89.0f)
 			cam.pitch = -89.0f;
+		lastX = window->mousepos.x; 
+		lastY = window->mousepos.y; 
+	}
+	void CamUpdate(CameraComponent& cam) {
+		if(cam.dirty){
+			switch (cam.type)
+			{
+			case ProjectionType::Perspective:
+				cam.cameradata.projection = glm::perspective(glm::radians(cam.cameradata.fov),
+					cam.cameradata.AspectRatio, cam.cameradata.NCP, cam.cameradata.FCP);
+				break;
+			case ProjectionType::Orthographic:
+				cam.cameradata.projection = glm::ortho(0.0f, static_cast<float>(cam.cameradata.windowWidth),
+					0.0f, static_cast<float>(cam.cameradata.windowHeight), -1.0f, 1.0f);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 	void Move(TransformComponent& transform, float dt) {
 
@@ -310,7 +392,7 @@ public:
 					glm::vec3 lightPos = transform.position;
 					if (light.type == 0)
 						glm::vec3 lightPos = center - transform.position * 20.0f;
-					Warn(Engine::CORE::LogCategory::API, lightPos.x, lightPos.y, lightPos.z); 
+					//Warn(Engine::CORE::LogCategory::API, lightPos.x, lightPos.y, lightPos.z); 
 					glm::mat4 lightView = glm::lookAt(lightPos, center, transform.up);
 					glm::mat4 lightProjection;
 					if (light.type == 0) 
@@ -327,24 +409,26 @@ public:
 
 					Engine::API::BindFBO(light.depthFBO);
 					Engine::API::clearBuffers(Engine::API::Buffers::DEPTH);
-					auto viewr = registry.view<TransformComponent, MeshRendererComponent>();
-					viewr.each(
-						[this, light](auto entity,
-							TransformComponent& transform, 
-							MeshRendererComponent& render) {
-								auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
-								auto shaderldata = Engine::AssetManager::GetInstance().GetShader(depthshaderID);
-								Engine::API::useShader(*shaderldata);
-								if (modeldata and render.state.shadow)
-									modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
-										Engine::API::SetUniform(shaderldata->programID, node.localTransform * transform.modelMatrix, "model");
+					if(light.shadow) {
+						auto viewr = registry.view<TransformComponent, MeshRendererComponent>();
+						viewr.each(
+							[this, light](auto entity,
+								TransformComponent& transform,
+								MeshRendererComponent& render) {
+									auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
+									auto shaderldata = Engine::AssetManager::GetInstance().GetShader(depthshaderID);
+									Engine::API::useShader(*shaderldata);
+									if (modeldata and render.state.shadow)
+										modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
+										Engine::API::SetUniform(shaderldata->programID, transform.modelMatrix * node.localTransform, "model"); 
 										Engine::API::SetUniform(shaderldata->programID, light.lightSpaceMatrix, "lightSpaceMatrix");
 										for (const int& i : node.meshIndices) {
 											Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
 										}
 
-								});
-						});
+											});
+							});
+					}
 					Engine::API::BindFBO(0);
 					Engine::API::Bind(0, light.dephtmao);
 					Engine::API::setViewport(0, 0, Window->display.width, Window->display.height);

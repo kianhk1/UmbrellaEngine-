@@ -105,7 +105,6 @@ namespace Engine {
             DATA::TextureHandle Handle(hash);
             textures.emplace(Handle.ID, texture);
 
-            static json datat;
             for (auto& path : path.paths)
             {
                 datat["Texture"]["2D"][std::to_string(hash)] = path; 

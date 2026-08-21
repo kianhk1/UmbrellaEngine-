@@ -3,7 +3,7 @@
 #include "../../Core/Data/Data.h"
 namespace Engine {
     namespace API {
-        enum class KeyboardKey {
+        enum KeyboardKey {
             KEY_NULL = 0,        // Key: NULL, used for no key pressed
             // Alphanumeric keys
             KEY_APOSTROPHE = 39,       // Key: '
@@ -119,7 +119,7 @@ namespace Engine {
             KEY_VOLUME_UP = 24,       // Key: Android volume up button
             KEY_VOLUME_DOWN = 25        // Key: Android volume down button
         };
-        enum class MouseButton {
+        enum MouseButton {
             MOUSE_BUTTON_LEFT = 0,       // Mouse button left 
             MOUSE_BUTTON_RIGHT = 1,       // Mouse button right 
             MOUSE_BUTTON_MIDDLE = 2,       // Mouse button middle (pressed wheel)
@@ -134,6 +134,16 @@ namespace Engine {
             KEY_PRESS = 1,
             KEY_REPEAT = 2
         };
+        enum Mod
+        {
+            SHIFT = 1 << 0,
+            CONTROL = 1 << 1,
+            ALT = 1 << 2,
+            SUPER = 1 << 3,
+            CAPS_LOCK = 1 << 4,
+            NUM_LOCK = 1 << 5
+        };
+
         class Input
         {
         public:

@@ -17,14 +17,16 @@ namespace Engine {
 			windowclosecallback(Window->windowcontext->window);
 		}
 		bool Input::IsKeyPressed(std::shared_ptr<DATA::windowData> Window, KeyboardKey key) {
-			if (Window->keyboardKey[static_cast<int>(key)] == Action::KEY_PRESS or Window->keyboardKey[static_cast<int>(key)] == Action::KEY_REPEAT) {
+			if (Window->keyboardKey[static_cast<int>(key)].action == Action::KEY_PRESS or
+				Window->keyboardKey[static_cast<int>(key)].action == Action::KEY_REPEAT) {
 				return true;
 			}
 
 			return false;
 		}
 		bool Input::IsButtonPressed(std::shared_ptr<DATA::windowData> Window, MouseButton button) {
-			if (Window->mouseButton[static_cast<int>(button)] == Action::KEY_PRESS or Window->mouseButton[static_cast<int>(button)] == Action::KEY_REPEAT) {
+			if (Window->mouseButton[static_cast<int>(button)].action == Action::KEY_PRESS or
+				Window->mouseButton[static_cast<int>(button)].action == Action::KEY_REPEAT) {
 				return true;
 			}
 			return false;
@@ -33,7 +35,8 @@ namespace Engine {
 		void Input::keycallback(GLFWwindow* Window) { 
 			glfwSetKeyCallback(Window, [](GLFWwindow* Window, int key, int scancode, int action, int mods) {
 				auto* data = static_cast<DATA::windowData*>(glfwGetWindowUserPointer(Window));
-				data->keyboardKey[key] = action;
+				data->keyboardKey[key].action = action;
+				data->keyboardKey[key].mod = mods; 
 				if (action == Action::KEY_PRESS)
 					Event::EventManager::GetInstance().Broadcast("keypress", &key);
 				else if (action == Action::KEY_REPEAT)
@@ -45,7 +48,8 @@ namespace Engine {
 		void Input::mousebuttoncallback(GLFWwindow* Window) {
 			glfwSetMouseButtonCallback(Window, [](GLFWwindow* Window, int key, int action, int mods) {
 				auto* data = static_cast<DATA::windowData*>(glfwGetWindowUserPointer(Window));
-				data->mouseButton[key] = action;
+				data->mouseButton[key].action = action;
+				data->mouseButton[key].mod = mods;
 				if (action == Action::KEY_PRESS)
 					Event::EventManager::GetInstance().Broadcast("buttonpress", &key);
 				else if (action == Action::KEY_REPEAT)

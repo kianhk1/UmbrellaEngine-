@@ -23,8 +23,8 @@ namespace Engine {
         enum class LogCategory;
     }
     namespace API {
-        enum class KeyboardKey;
-		enum class MouseButton;
+        enum KeyboardKey;
+		enum MouseButton;
     }
     enum class TextureType;
     namespace DATA {
@@ -176,14 +176,12 @@ namespace Engine {
         struct Point { int x; int y; };
 
         struct KeyData {
-            API::KeyboardKey keycode;
             int action;
-            int mods;
+            int mod = 0;
         };
         struct ButtonData {
-            API::MouseButton buttoncode;
+            int mod = 0;
             int action;
-            int mods;
         };
 
         struct WindowContext;
@@ -207,8 +205,8 @@ namespace Engine {
 			//ButtonData button;
 			//KeyData key;
 
-            int keyboardKey[512];                  // Keyboard key pressed
-			int mouseButton[8];                    // Mouse button pressed
+            KeyData keyboardKey[512];                  // Keyboard key pressed
+			ButtonData mouseButton[8];                    // Mouse button pressed
 
 			Point mousepos;                        // Mouse position
         };

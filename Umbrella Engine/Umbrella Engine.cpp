@@ -79,19 +79,19 @@ int main() {
 	auto scene = Engine::Scene::SceneManager::GetInstance().Creat("scene1");
 	Engine::Scene::SceneManager::GetInstance().Load(scene);
 
-	//ObjCube sss(scene, "Assets/skybox/skybox.json", 5);
-	//ObjCube cccc(scene, "Assets/chess.gltf");
+	ObjCube sss(scene, "Assets/skybox/skybox.json", 5);
+	ObjCube cccc(scene, "Assets/chess.gltf");
 	//ObjCube dddd("Assets/TEST.gltf");
-	//ObjCube nn(scene, 1, 1, 1);
+	ObjCube nn(scene, 1, 1, 1);
 
-	/*Entity camera{ scene->Registry().create()};
+	Entity camera{ scene->Registry().create()};
 	CameraComponent cam;
 	TransformComponent trans;
 	cam.type = ProjectionType::Perspective;
 	
 	trans.position = glm::vec3(1.0f);
 	scene->Registry().emplace<CameraComponent>(camera, cam);
-	scene->Registry().emplace<TransformComponent>(camera, trans);*/
+	scene->Registry().emplace<TransformComponent>(camera, trans);
 	
 	RenderSystem sys(scene);
 	CameraSystem ccc(win, scene);
@@ -101,7 +101,7 @@ int main() {
 	ll.Start();
 	int frameCount = 0;
 	
-	//auto fil = Engine::Scene::SceneManager::GetInstance().Save();
+	auto fil = Engine::Scene::SceneManager::GetInstance().Save();
 	//Warn(Engine::CORE::LogCategory::Resource, fil ? "yes": "no");
 
 	while (!Engine::API::IsWindowShouldClose(win))

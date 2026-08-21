@@ -9,5 +9,6 @@ uniform vec4 emissiveColor;
 
 void main() {
     emissiveColor;
-	FragColor = texture(skybox, TexCoord) * color;
+	color;
+	FragColor = texture(skybox, TexCoord);
 }

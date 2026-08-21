@@ -70,6 +70,7 @@ namespace Engine {
 		{
 			std::cout.rdbuf(&CORE::Logger::consolebuffer);
 
+			
 			// Setup GLFW window
 			std::shared_ptr <Engine::DATA::windowData> win = m_Specification.windowapp;
 			Engine::API::SetWindowIcon(win, "Assets/Umbrella.png");
@@ -84,7 +85,7 @@ namespace Engine {
 						std::chrono::milliseconds(10));
 				}
 				}).detach();
-
+			m_Specification.scene = Engine::Scene::SceneManager::GetInstance().Creat("scene1");
 			// Setup Dear ImGui context
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext(); 
@@ -139,7 +140,8 @@ namespace Engine {
 		{
 			std::shared_ptr <Engine::DATA::windowData> win = m_Specification.windowapp;
 			std::shared_ptr <Scene::Scene> scene = m_Specification.scene;
-			scene = Engine::Scene::SceneManager::GetInstance().Creat("scene1");
+
+			
 
 			RenderSystem sys(scene);
 			CameraSystem ccc(win, scene);
@@ -163,11 +165,33 @@ namespace Engine {
 				// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 				Engine::API::clearBuffers(7);
 				Engine::API::clearColor(0.1f, 0.5f, 0.5f, 1.0f);
+				
+
+
 				{
 					ll.Update(0.0f); 
 					sys.Update(0.0f); 
 					ccc.Update(0.0f);
 				}
+
+				if (Engine::API::Input::IsButtonPressed(win, Engine::API::MouseButton::MOUSE_BUTTON_MIDDLE)) {
+					Engine::API::HideCursor(win);
+				}
+				else
+					Engine::API::ShowCursor(win); 
+				Engine::Event::EventManager::GetInstance().Subscribe("keypress", [&](void* d) {
+					auto* key = static_cast<int*>(d);
+					if(*key == Engine::API::KeyboardKey::KEY_S and
+						(win->keyboardKey[*key].mod and API::Mod::CONTROL))
+						Event::EventManager::GetInstance().Broadcast("savescene", &scene);
+					});
+				
+				Engine::Event::EventManager::GetInstance().Subscribe("savescene", [&](void* d) {
+					auto* scene =
+						static_cast<std::shared_ptr<Engine::Scene::Scene>*>(d);
+					Engine::Scene::SceneManager::GetInstance().Save(*scene);  
+					Info(Engine::CORE::LogCategory::API, "save scene:'", scene->get()->GetName(), "'");
+					});
 
 				for (auto& layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);

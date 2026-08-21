@@ -12,7 +12,7 @@ layout (binding = 1) uniform Light {
     int type;
 };
 
-vec3 ambientcolor = vec3(0.3f);
+vec3 ambientcolor = vec3(0.1f);
 
 in vec3 ourColor;
 in vec2 TexCoord;

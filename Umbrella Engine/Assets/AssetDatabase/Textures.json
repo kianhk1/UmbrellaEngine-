@@ -10,6 +10,9 @@
             "4385888778282709161": "Assets/chess_set_board_arm_2k.jpg",
             "7838513740297501027": "Assets/chess_set_pieces_black_nor_gl_2k.jpg",
             "9464096470990571840": "Assets/chess_set_pieces_white_arm_2k.jpg"
+        },
+        "CubeMap": {
+            "14945172872186919380": "Assets/skybox/skybox.json"
         }
     }
 }

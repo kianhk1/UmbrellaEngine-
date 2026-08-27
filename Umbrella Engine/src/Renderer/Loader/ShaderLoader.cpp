@@ -4,8 +4,8 @@ namespace Engine {
 	DATA::ShaderHandle Engine::AssetManager::LoadShader(const std::string& vertex, const std::string& fragment)
 	{
         uint64_t hash = CORE::Hash::FNV1a(vertex + "|" + fragment);
-        auto it = textures.find(hash);
-        if (it != textures.end())
+        auto it = shaders.find(hash); 
+        if (it != shaders.end()) 
             return it->first;
         auto shader = std::make_shared<DATA::ShaderData>();
         for (auto& path : { vertex,fragment })
@@ -26,14 +26,12 @@ namespace Engine {
             Engine::API::useShader(*shader);
             datas["shader"][std::to_string(hash)] = { vertex ,fragment };
             std::ofstream filet("Assets/AssetDatabase/Shaders.json");
-            Warn(Engine::CORE::LogCategory::Resource, filet.is_open() ? "yes" : "no");
             filet << datas.dump(4);
             return Handle;
         }
         else
         {
             DATA::ShaderHandle Handle(0);
-            Warn(Engine::CORE::LogCategory::Resource, "نهههههههیییسبیسبیسبیسب43455354353");
             return Handle;
         }
 	}

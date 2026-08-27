@@ -36,9 +36,9 @@ namespace Engine {
                     return "";
                 }
 
-                stringstream buf;
+                std::stringstream buf;
                 buf << file.rdbuf();
-                string content = buf.str();
+                std::string content = buf.str();
                 if (content.size() >= 3 &&
                     (unsigned char)content[0] == 0xEF &&
                     (unsigned char)content[1] == 0xBB &&

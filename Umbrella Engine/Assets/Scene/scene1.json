@@ -1,7 +1,142 @@
 {
     "Scene name:": "scene1",
     "entities": {
-        "0": {
+        "camera": {
+            "component": {
+                "Camera": {
+                    "cameraTarget": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "cameratype": 0,
+                    "firstMouse": true,
+                    "fov": 90.0,
+                    "ismoving": false
+                },
+                "transform": {
+                    "forward": [
+                        0.6029380559921265,
+                        -0.7649213671684265,
+                        0.22662952542304993
+                    ],
+                    "position": [
+                        -0.34037965536117554,
+                        1.3488426208496094,
+                        0.6651543378829956
+                    ],
+                    "rotation": [
+                        -1.399999976158142,
+                        -10.800000190734863,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            }
+        },
+        "chess": {
+            "component": {
+                "MeshRenderer": {
+                    "modelpath": "Assets/chess.gltf",
+                    "shader": [
+                        "Shader/vertex_shader.glsl",
+                        "Shader/fragment_shader.glsl"
+                    ],
+                    "stat": {
+                        "depthfunc": 513,
+                        "depthtest": true,
+                        "shadow": true
+                    }
+                },
+                "transform": {
+                    "forward": [
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        3.9000000953674316,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            }
+        },
+        "light": {
+            "component": {
+                "Light": {
+                    "lightcolor": [
+                        0.9074733257293701,
+                        0.710477352142334,
+                        0.710477352142334
+                    ],
+                    "lighttype": 0
+                },
+                "transform": {
+                    "forward": [
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        -2.0999999046325684,
+                        1.2999999523162842,
+                        1.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        3.0,
+                        3.0,
+                        3.0
+                    ]
+                }
+            }
+        },
+        "lkj": {
+            "component": {
+                "transform": {
+                    "forward": [
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            }
+        },
+        "skybox": {
             "component": {
                 "MeshRenderer": {
                     "Texture": [
@@ -38,115 +173,6 @@
                         3.0,
                         3.0,
                         3.0
-                    ]
-                }
-            }
-        },
-        "1": {
-            "component": {
-                "MeshRenderer": {
-                    "modelpath": "Assets/chess.gltf",
-                    "shader": [
-                        "Shader/vertex_shader.glsl",
-                        "Shader/fragment_shader.glsl"
-                    ],
-                    "stat": {
-                        "depthfunc": 513,
-                        "depthtest": true,
-                        "shadow": true
-                    }
-                },
-                "transform": {
-                    "forward": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "rotation": [
-                        0.0,
-                        17.299999237060547,
-                        0.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
-                }
-            }
-        },
-        "2": {
-            "component": {
-                "Light": {
-                    "lightcolor": [
-                        0.3019607961177826,
-                        0.10980392247438431,
-                        0.8588235378265381
-                    ],
-                    "lighttype": 0
-                },
-                "transform": {
-                    "forward": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        -2.9000000953674316,
-                        7.400000095367432,
-                        -4.699999809265137
-                    ],
-                    "rotation": [
-                        -0.20000000298023224,
-                        0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        3.0,
-                        3.0,
-                        3.0
-                    ]
-                }
-            }
-        },
-        "3": {
-            "component": {
-                "Camera": {
-                    "cameraTarget": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "cameratype": 0,
-                    "firstMouse": true,
-                    "fov": 90.0,
-                    "ismoving": false
-                },
-                "transform": {
-                    "forward": [
-                        0.6187171936035156,
-                        -0.779338002204895,
-                        0.09910252690315247
-                    ],
-                    "position": [
-                        -2.21319842338562,
-                        1.6521915197372437,
-                        0.05006817728281021
-                    ],
-                    "rotation": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        2.299999952316284,
-                        1.0,
-                        1.0
                     ]
                 }
             }

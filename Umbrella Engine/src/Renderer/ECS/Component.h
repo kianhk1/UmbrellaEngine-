@@ -4,7 +4,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "../../Core/Data/Data.h"
 
-
 enum ProjectionType
 {
 	Perspective,
@@ -57,4 +56,9 @@ public:
 	glm::mat4 lightSpaceMatrix;
 	bool shadow = true;
 	int type = Point;
+};
+class ScriptComponent {
+public:
+	int id;
+	std::string name;
 };

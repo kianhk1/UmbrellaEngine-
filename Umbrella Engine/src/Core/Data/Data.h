@@ -49,11 +49,18 @@ namespace Engine {
             uint64_t ID = 0;
             
         };
+        struct ScriptHandle
+        {
+            ScriptHandle() = default;
+            ScriptHandle(uint64_t id) : ID(id) {} 
+            uint64_t ID = 0; 
+
+        };
 
         struct LightData {
             glm::vec3 lightcolor = glm::vec3(1.0f);
         };
-
+        
         struct CameraData {
             glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
             glm::mat4 projection;

@@ -68,7 +68,7 @@ namespace Engine {
 
 		void Application::Init()
 		{
-			std::cout.rdbuf(&CORE::Logger::consolebuffer);
+			//std::cout.rdbuf(&CORE::Logger::consolebuffer);
 
 			
 			// Setup GLFW window
@@ -85,7 +85,7 @@ namespace Engine {
 						std::chrono::milliseconds(10));
 				}
 				}).detach();
-			m_Specification.scene = Engine::Scene::SceneManager::GetInstance().Creat("scene1");
+			//m_Specification.scene = Engine::Scene::SceneManager::GetInstance().Creat("scene1");
 			// Setup Dear ImGui context
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext(); 
@@ -139,9 +139,9 @@ namespace Engine {
 		void Application::Run()
 		{
 			std::shared_ptr <Engine::DATA::windowData> win = m_Specification.windowapp;
-			std::shared_ptr <Scene::Scene> scene = m_Specification.scene;
+			std::shared_ptr <Scene::Scene> scene = Scene::SceneManager::GetInstance().GetActivescene();
 
-			
+
 
 			RenderSystem sys(scene);
 			CameraSystem ccc(win, scene);
@@ -179,11 +179,13 @@ namespace Engine {
 				}
 				else
 					Engine::API::ShowCursor(win); 
+
 				Engine::Event::EventManager::GetInstance().Subscribe("keypress", [&](void* d) {
 					auto* key = static_cast<int*>(d);
 					if(*key == Engine::API::KeyboardKey::KEY_S and
 						(win->keyboardKey[*key].mod and API::Mod::CONTROL))
-						Event::EventManager::GetInstance().Broadcast("savescene", &scene);
+						Event::EventManager::GetInstance().Broadcast("savescene", 
+							&Scene::SceneManager::GetInstance().GetActivescene());
 					});
 				
 				Engine::Event::EventManager::GetInstance().Subscribe("savescene", [&](void* d) {

@@ -14,12 +14,12 @@ namespace Engine {
 			void InitGlfw() {
                 if (!glfwInit())
                 {
-                    ّFatal(Engine::CORE::LogCategory::API, "initialize Glfw failed.");
+                    Fatal(Engine::CORE::LogCategory::API, "initialize Glfw failed.");
                     return;
                 }
 				int major, minor, rev;
 				glfwGetVersion(&major, &minor, &rev);
-				Info(Engine::CORE::LogCategory::API, "GLFW version : " + to_string(major) + "." + to_string(minor) + "." + to_string(rev));
+				Info(Engine::CORE::LogCategory::API, "GLFW version : " + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(rev)); 
 			}
             std::shared_ptr<DATA::windowData>  InitWindow(int width, int height, const char* title) {
                 std::shared_ptr<DATA::windowData> win = std::make_shared<DATA::windowData>();
@@ -34,7 +34,7 @@ namespace Engine {
                 glfwGetWindowPos(win->windowcontext->window, &win->position.x, &win->position.y);
                 glfwGetWindowSize(win->windowcontext->window, &win->display.width, &win->display.height);
                 if (!win->windowcontext->window) {
-                    ّFatal(Engine::CORE::LogCategory::API, "Creating a new window failed.");
+                    Fatal(Engine::CORE::LogCategory::API, "Creating a new window failed.");
                     glfwTerminate();
                     win->ready = false;
                     return nullptr;
@@ -42,7 +42,7 @@ namespace Engine {
                 glfwMakeContextCurrent(win->windowcontext->window);
                 glfwSetWindowUserPointer(win->windowcontext->window, win.get());
                 Engine::Event::EventManager::GetInstance().Subscribe("windowclose", [&](void* d) {
-                    Info(Engine::CORE::LogCategory::API, "The " + string(win->title) + " window closed.");
+                    Info(Engine::CORE::LogCategory::API, "The " + std::string(win->title) + " window closed."); 
                     CloseWindow(win);
                     });
                 win->ready = true;
@@ -107,7 +107,7 @@ namespace Engine {
             //void MaximizeWindow(void)override;                                  // Set window state: maximized, if resizable
             //void MinimizeWindow(void)override;                                  // Set window state: minimized, if resizable
             //void RestoreWindow(void)override;                                   // Set window state: not minimized/maximized
-            void SetWindowIcon(std::shared_ptr<DATA::windowData> win, string imagePath) {
+            void SetWindowIcon(std::shared_ptr<DATA::windowData> win, std::string imagePath) {
                 GLFWimage images;
                 images.pixels = stbi_load(imagePath.c_str(), &images.width, &images.height, 0, 4);
                 if (!images.pixels) {

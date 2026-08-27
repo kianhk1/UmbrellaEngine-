@@ -13,20 +13,23 @@ namespace Engine {
         class Scene {
         public:
             Scene(std::string Name) : name(Name) {}
-            Entity CreateEntity() {
-                return registry.create();
+            Entity CreateEntity(std::string name) {
+                return registry.create(name);
+            }
+            std::string GetName(Entity entity) {
+                return registry.GetName(entity);
             }
             void DestroyEntity(Entity entity) {
                 registry.destroy(entity);
             }
 
-            entt::registry& Registry() {
+            entt::Registry& Registry() {
                 return registry;
             }
             bool isActive = false;
             std::string GetName() const { return name; }
         private:
-            entt::registry registry;
+            entt::Registry registry;
             std::string name;
             
         };
@@ -56,12 +59,11 @@ namespace Engine {
                         if (data["isActive"].get<bool>())
                             Load(scene);
                         
-
                         auto& registry = scene->Registry(); 
 
                         for (auto& [id, entityJson] : data["entities"].items())
                         {
-                            Entity entity = scene->CreateEntity();
+                            Entity entity = scene->CreateEntity(id);
 
                             for (auto& [name, component] : entityJson["component"].items())
                             {
@@ -145,10 +147,16 @@ namespace Engine {
                             }
                         }
                     }
+                    if (!ActiveScene)
+                    {
+                        Load(Creat("first"));
+                    }
                 }
             }
             void Load(std::shared_ptr<Scene> scene) {
                 scene->isActive = true;
+                if (ActiveScene) 
+                    ActiveScene->isActive = false;
                 ActiveScene = scene;
             }
             bool Save() {
@@ -163,7 +171,7 @@ namespace Engine {
                 auto transformview = registry.view<TransformComponent>();
                 transformview.each([&](auto entity,
                     TransformComponent& transform) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["transform"] = {
+                        data["entities"][registry.GetName(entity)]["component"]["transform"] = {
                             {"position", {transform.position.x, transform.position.y, transform.position.z}},
                             {"rotation", {transform.rotation.x, transform.rotation.y, transform.rotation.z}},
                             {"scale", {transform.scale.x, transform.scale.y, transform.scale.z}},
@@ -176,7 +184,7 @@ namespace Engine {
                     auto model = AssetManager::GetInstance().GetModel(Renderer.modelhandle);
 
                     // ساختار اصلاح شده
-                    data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"] = {
+                    data["entities"][registry.GetName(entity)]["component"]["MeshRenderer"] = {
                         {"modelpath", model->path}, // کلمه paht اصلاح شد
                         {"stat", {
                             {"depthtest", Renderer.state.depthtest},
@@ -185,10 +193,10 @@ namespace Engine {
                         }}
                     };
 
-                    auto& shaders = shaderDatabase["shader"][to_string(Renderer.shader.ID)];
+                    auto& shaders = shaderDatabase["shader"][std::to_string(Renderer.shader.ID)]; 
                     for (auto& shader : shaders)
                     {
-                        data["entities"][std::to_string(entt::to_integral(entity))]
+                        data["entities"][registry.GetName(entity)]
                             ["component"]["MeshRenderer"]["shader"]
                             .push_back(shader);
                     }
@@ -198,11 +206,11 @@ namespace Engine {
                             auto id = std::to_string(texture.second.ID);
 
                             if (textureDatabase["Texture"]["CubeMap"].contains(id)) {
-                                data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"]["Texture"]
+                                data["entities"][registry.GetName(entity)]["component"]["MeshRenderer"]["Texture"]
                                     .push_back(textureDatabase["Texture"]["CubeMap"][id]);
                             }
                             if (textureDatabase["Texture"]["2D"].contains(id) and false) { // شرط false برداشته شد
-                                data["entities"][to_string(entt::to_integral(entity))]["component"]["MeshRenderer"]["Texture"]
+                                data["entities"][registry.GetName(entity)]["component"]["MeshRenderer"]["Texture"]
                                     .push_back(textureDatabase["Texture"]["2D"][id]);
                             }
                         }
@@ -212,7 +220,7 @@ namespace Engine {
                 auto Cameraview = registry.view<CameraComponent>();
                 Cameraview.each([&](auto entity,
                     CameraComponent& Camera) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["Camera"] = {
+                        data["entities"][registry.GetName(entity)]["component"]["Camera"] = {
                             {"cameraTarget", {Camera.cameradata.cameraTarget.x,Camera.cameradata.cameraTarget.y,Camera.cameradata.cameraTarget.z}},
                             {"cameratype", Camera.type},
                             {"firstMouse", Camera.firstMouse},
@@ -223,7 +231,7 @@ namespace Engine {
                 auto Lightview = registry.view<LightComponent>();
                 Lightview.each([&](auto entity,
                     LightComponent& Light) {
-                        data["entities"][to_string(entt::to_integral(entity))]["component"]["Light"] = {
+                        data["entities"][registry.GetName(entity)]["component"]["Light"] = {
                             {"lightcolor", {Light.light.lightcolor.x,Light.light.lightcolor.y,Light.light.lightcolor.z}},
                             {"lighttype", Light.type} };
                     });
@@ -241,16 +249,14 @@ namespace Engine {
             std::shared_ptr<Scene> Creat(std::string name) {
                 for (auto& scene : Scenes) {
                     if (scene->GetName() == name)
-                        Load(scene);
                         return scene;
                 }
                 std::shared_ptr<Scene> scene = std::make_shared<Scene>(name);
-                ActiveScene = scene; 
                 Scenes.push_back(scene); 
                 return scene;
             }
 
-            std::shared_ptr<Scene> GetActivescene() {
+            std::shared_ptr<Scene>& GetActivescene() {
                 return ActiveScene;
             }
 

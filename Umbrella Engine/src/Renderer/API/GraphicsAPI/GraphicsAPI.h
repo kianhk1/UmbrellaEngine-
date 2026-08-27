@@ -12,8 +12,6 @@
 
 #define opengl
 
-using namespace std;
-
 namespace Engine {
     namespace API {
         const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;

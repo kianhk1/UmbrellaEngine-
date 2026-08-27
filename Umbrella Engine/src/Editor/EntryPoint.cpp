@@ -1,7 +1,14 @@
 #pragma once
 #include "Application.h"
 #define UE_PLATFORM_WINDOWS 
-
+// NVIDIA GPU
+extern "C" {
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
+// AMD GPU
+extern "C" {
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
 #ifdef UE_PLATFORM_WINDOWS
 
 extern Engine::Editor::Application* Engine::Editor::CreateApplication(int argc, char** argv);

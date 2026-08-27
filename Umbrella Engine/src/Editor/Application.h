@@ -22,7 +22,6 @@ namespace Engine {
 		{
 			std::string Name;
 			std::shared_ptr <Engine::DATA::windowData> windowapp;
-			std::shared_ptr <Scene::Scene> scene;
 		};
 
 		class Application

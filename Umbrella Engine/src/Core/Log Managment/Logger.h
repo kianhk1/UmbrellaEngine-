@@ -11,12 +11,11 @@
 
 #include "../Data/Data.h"
 
-#define øFatal(category, ...) Engine::CORE::Logger::FATAL(__LINE__, std::string(__FILE__), category, __VA_ARGS__)
+#define Fatal(category, ...) Engine::CORE::Logger::FATAL(__LINE__, std::string(__FILE__), category, __VA_ARGS__)
 #define Error(category, ...) Engine::CORE::Logger::ERROR(__LINE__, std::string(__FILE__), category, __VA_ARGS__)
 #define Warn(category, ...) Engine::CORE::Logger::WARN(__LINE__, std::string(__FILE__), category, __VA_ARGS__)
 #define Info(category, ...) Engine::CORE::Logger::INFO(__LINE__, std::string(__FILE__), category, __VA_ARGS__)
 
-using namespace std;
 namespace Engine{
     namespace CORE {
         enum class LogLevel {
@@ -63,21 +62,21 @@ namespace Engine{
         };
         class Logger {
         public:
-            static void log(LogLevel level, uint32_t& line, string& file, LogCategory& category, string message);
+            static void log(LogLevel level, uint32_t& line, std::string& file, LogCategory& category, std::string message);
             template<typename... Args>
-            static void INFO(uint32_t line, string file, LogCategory category, Args&&... args) {
+            static void INFO(uint32_t line, std::string file, LogCategory category, Args&&... args) {
                 log(LogLevel::INFO, line, file, category, ToString(std::forward<Args>(args)...));
             }
             template<typename... Args>
-            static void WARN(uint32_t line, string file, LogCategory category, Args&&... args) {
+            static void WARN(uint32_t line, std::string file, LogCategory category, Args&&... args) {
                 log(LogLevel::WARN, line, file, category, ToString(std::forward<Args>(args)...));
             }
             template<typename... Args>
-            static void ERROR(uint32_t line, string file, LogCategory category, Args&&... args) {
+            static void ERROR(uint32_t line, std::string file, LogCategory category, Args&&... args) {
                 log(LogLevel::ERROR, line, file, category, ToString(std::forward<Args>(args)...));
             }
             template<typename... Args>
-            static void FATAL(uint32_t line, string file, LogCategory category, Args&&... args) {
+            static void FATAL(uint32_t line, std::string file, LogCategory category, Args&&... args) {
                 log(LogLevel::FATAL, line, file, category, ToString(std::forward<Args>(args)...));
             }
             static void Flush();
@@ -87,9 +86,9 @@ namespace Engine{
             static ConsoleBuffer consolebuffer;
 
         private:
-            static string levelToString(LogLevel level);
-            static string currentTime();
-            static string ShortFile(const std::string& path);
+            static  std::string levelToString(LogLevel level);
+            static  std::string currentTime();
+            static  std::string ShortFile(const std::string& path);
             template<typename... Args>
             static std::string ToString(Args&&... args)
             {

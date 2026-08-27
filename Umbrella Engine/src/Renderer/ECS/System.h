@@ -8,9 +8,9 @@
 class ObjCube
 {
 public:
-	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path) {
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path, std::string name) {
 		auto& registry = scene->Registry();
-		entity = registry.create();
+		entity = registry.create(name);
 		TransformComponent t;
 		MeshRendererComponent m;
 		m.modelhandle =
@@ -21,9 +21,9 @@ public:
 		registry.emplace<TransformComponent>(entity, t);
 		registry.emplace<MeshRendererComponent>(entity, m);
 	}
-	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, int x, int y, int z) {
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, int x, int y, int z, std::string name) {
 		auto& registry = scene->Registry();
-		entity = registry.create();
+		entity = registry.create(name);
 		TransformComponent t;
 		t.position = glm::vec3(x, y, z);
 		LightComponent l;
@@ -39,9 +39,9 @@ public:
 		registry.emplace<LightComponent>(entity, l);
 		//registry.emplace<MeshRendererComponent>(Entity, m); 
 	}
-	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path, int a) {
+	ObjCube(std::shared_ptr<Engine::Scene::Scene> scene, std::string path, int a, std::string name) {
 		auto& registry = scene->Registry();
-		entity = registry.create();
+		entity = registry.create(name);
 		TransformComponent t;
 		MeshRendererComponent m;
 		m.modelhandle =
@@ -78,6 +78,7 @@ class RenderSystem : public System {
 public:
 	RenderSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
 	void Start() override {
+		Warn(Engine::CORE::LogCategory::API, ActiveScene->GetName());
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		colormap = Engine::API::createcolorhmap();
@@ -116,6 +117,7 @@ public:
 			});
 	}
 	void Update(float dt) override {
+		onScene();
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		Engine::API::clearBuffers(Engine::API::Buffers::COLOR);
@@ -179,6 +181,13 @@ private:
 		Logger::WARN("z:" + to_string(right.z) + "\n");*/
 
 	}
+	void onScene() {
+		if (ActiveScene != Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		{
+			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
+			Start();
+		}
+	}
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
 	unsigned int colormap, colorFBO;
 };
@@ -215,6 +224,7 @@ public:
 			});
 	}
 	void Update(float dt) override {
+		onScene();
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, CameraComponent>();
 		static bool wasCameraControl = true;
@@ -229,15 +239,11 @@ public:
 							cam.firstMouse = true;
 							cam.ismoving = false;
 							wasCameraControl = true;
-
-							Warn(Engine::CORE::LogCategory::API, cam.firstMouse ? "true" : "false");
-							Warn(Engine::CORE::LogCategory::API, "x", Window->mousepos.x,"y", Window->mousepos.y); 
 						}
 						else if (Window->hidecursor && wasCameraControl)
 						{
 							wasCameraControl = false;
 							cam.ismoving = true;
-							Warn(Engine::CORE::LogCategory::API, "x", Window->mousepos.x, "y", Window->mousepos.y);
 						}
 
 						Engine::Event::EventManager::GetInstance().Subscribe("windowresize", [&](void* d) {
@@ -340,7 +346,16 @@ private:
 			transform.position -= transform.up * velocity;// پایین 
 		}
 	}
+	void onScene() {
+		if (ActiveScene == Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		{
+			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
+			Start();
+		}
+	}
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
+
+
 };
 
 class LightSystem : public System {
@@ -368,6 +383,7 @@ public:
 			});
 	}
 	void Update(float dt) override {
+		onScene();
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, LightComponent>(); 
 
@@ -435,6 +451,13 @@ public:
 			});
 	}
 private:
+	void onScene() {
+		if (ActiveScene == Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		{
+			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
+			Start();
+		}
+	}
 	Engine::DATA::ShaderHandle depthshaderID;
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene; 
 	std::shared_ptr<Engine::DATA::windowData> Window;

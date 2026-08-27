@@ -17,9 +17,6 @@ namespace Engine {
     };
 	class AssetManager {
 	public:
-        AssetManager() {
-            //for (auto& path : CORE::FileSystem::GetFiles("As/sets/Scene")){}
-        }
         DATA::TextureHandle LoadCubeMap(const std::vector<std::string>& paths);
         DATA::TextureHandle LoadCubeMap(const std::string paths);
         std::vector<DATA::TextureHandle> M_LoadTexture(const std::vector<DATA::TextureDesc>& path);
@@ -34,12 +31,15 @@ namespace Engine {
         DATA::ModelHandle LoadModel(const std::string& path);
         std::shared_ptr<DATA::ModelData> GetModel(DATA::ModelHandle Handle);
 
+        DATA::ScriptHandle LoadScript(const std::filesystem::path& path); 
+        std::string GetScript(DATA::ScriptHandle Handle);
+
         static AssetManager& GetInstance() {
             static AssetManager instance;
             return instance;
         }
 	private:
-		//AssetManager() = default;
+		AssetManager() = default;
 
         std::unordered_map<
             uint64_t,
@@ -55,6 +55,12 @@ namespace Engine {
             uint64_t,
             std::shared_ptr<DATA::ModelData>
         > models;
+
+        std::unordered_map<
+            uint64_t,
+            std::string
+        > Scripts; 
+
        static uint32_t NextTextureHandle;
     public:
         static json datat;

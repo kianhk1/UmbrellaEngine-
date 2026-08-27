@@ -8,6 +8,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <string>
+
 #include "../../Core/Log Managment/Logger.h"
 
 namespace Engine {
@@ -72,6 +73,10 @@ namespace Engine {
 				load_model(scene->mRootNode, scene, data.root, data);
 				return data;
 			}
+
+			static bool Compile(
+				const std::string& cppFile,
+				const std::string& outputDll);
 
 		private:
 			

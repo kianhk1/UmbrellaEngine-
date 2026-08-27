@@ -9,7 +9,7 @@ namespace Engine {
             return it->first;
         auto model = std::make_shared<DATA::ModelData>();
         if (!CORE::FileSystem::Exists(path)) {
-            Error(CORE::LogCategory::Resource, "File:" , path , "not exists");
+            Error(CORE::LogCategory::Resource, "File:" , path , "not exists"); 
             return NULL;
         }
         auto data = CORE::Reader::ReadModel(path);

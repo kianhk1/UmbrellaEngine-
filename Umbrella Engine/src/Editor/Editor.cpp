@@ -147,12 +147,15 @@ namespace Engine {
             void OnAttach() override
             {
                 activescene = Scene::SceneManager::GetInstance().GetActivescene();
+                if (!entities.empty())
+                    entities.clear();
+
                 auto& storage = activescene->Registry().storage<entt::entity>();
                 for (auto entity : storage.each())
                 {
                     entities.push_back(std::get<0>(entity));
                 }
-                
+                AssetManager::GetInstance().LoadScript("Assets/Script/FileName.cpp");
             }
 
             void OnDetach() override
@@ -162,7 +165,7 @@ namespace Engine {
 
             void OnUpdate(float ts) override
             {
-                
+                onScene();
             }
 
             void OnUIRender() override
@@ -170,8 +173,8 @@ namespace Engine {
                 ImGui::Begin("entities");
 
                 for (auto entity : entities)
-                {
-                    if (ImGui::Selectable(to_string(static_cast<int>(entity)).c_str()))
+                { 
+                    if (ImGui::Selectable(activescene->Registry().GetName(entity).c_str()))
                         activeentity = entity; 
                 }
 
@@ -254,7 +257,7 @@ namespace Engine {
         private:
             Entity activeentity;
             std::vector<entt::entity> entities;
-            std::shared_ptr<Scene::Scene> activescene;
+            
         };
 
 		Application* CreateApplication(int argc, char** argv)
@@ -270,6 +273,10 @@ namespace Engine {
             app->PushLayer<hLayer>();
 			app->SetMenubarCallback([app]()
 				{
+                    static bool showCreateScene = false;
+                    static bool showCreateEntity = false;
+                    static char name[128] = "";
+
 					if (ImGui::BeginMenu("File"))
 					{
 						if (ImGui::MenuItem("Exit"))
@@ -281,8 +288,82 @@ namespace Engine {
                             auto activescene = Scene::SceneManager::GetInstance().GetActivescene();
                             Event::EventManager::GetInstance().Broadcast("savescene", &activescene);
                         }
+                        if (ImGui::BeginMenu("Create"))
+                        {
+                            if (ImGui::MenuItem("Entity"))
+                            {
+                                showCreateEntity = true;
+                                name[0] = '\0';
+                            }
+                            
+                            
+
+                            if (ImGui::MenuItem("Scene"))
+                            {
+                                showCreateScene = true;
+                                name[0] = '\0';
+                            }
+                            ImGui::EndMenu();
+                        }
 						ImGui::EndMenu();
 					}
+
+                    if (showCreateScene)
+                    {
+                        ImGui::Begin("Create Scene", &showCreateScene);
+
+                        ImGui::InputText("Name", name, sizeof(name));
+
+                        if (ImGui::Button("Create"))
+                        {
+                            auto& activeScene =
+                                Scene::SceneManager::GetInstance().GetActivescene();
+                            
+                            Scene::SceneManager::GetInstance().
+                                Load(Scene::SceneManager::GetInstance().Creat(name));
+
+                            Event::EventManager::GetInstance()
+                                .Broadcast("savescene", &activeScene);
+
+                            showCreateScene = false;
+                        }
+
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Cancel"))
+                        {
+                            showCreateScene = false;
+                        }
+
+                        ImGui::End();
+                    }
+
+                    if (showCreateEntity)
+                    {
+                        ImGui::Begin("Create Entity", &showCreateEntity);
+
+                        ImGui::InputText("Name", name, sizeof(name));
+
+                        if (ImGui::Button("Create"))
+                        {
+                            auto& activeScene =
+                                Scene::SceneManager::GetInstance().GetActivescene();
+
+                            auto entity = activeScene->CreateEntity(std::string(name)); 
+                            TransformComponent t;
+                            activeScene->Registry().emplace<TransformComponent>(entity, t);
+                            showCreateEntity = false;
+                        }
+
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Cancel"))
+                        {
+                            showCreateEntity = false;
+                        }
+
+                        ImGui::End();
+                    }
 				});
 			return app;
 		}

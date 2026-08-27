@@ -28,7 +28,6 @@ namespace Engine {
             }
 
             std::ofstream file("Assets/AssetDatabase/Textures.json");
-            Warn(Engine::CORE::LogCategory::Resource, file.is_open() ? "yes" : "no");
             file << datat.dump(4);
             return Handle;
         }
@@ -71,7 +70,6 @@ namespace Engine {
 
             datat["Texture"]["CubeMap"][std::to_string(hash)] = paths; 
             std::ofstream filet("Assets/AssetDatabase/Textures.json");
-            Warn(Engine::CORE::LogCategory::Resource, filet.is_open() ? "yes" : "no"); 
             filet << datat.dump(4); 
             return Handle;
         }
@@ -111,7 +109,6 @@ namespace Engine {
             }
 
             std::ofstream file("Assets/AssetDatabase/Textures.json"); 
-            Warn(Engine::CORE::LogCategory::Resource, file.is_open() ? "yes" : "no"); 
             file << datat.dump(4); 
 
             return Handle;

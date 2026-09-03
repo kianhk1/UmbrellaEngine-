@@ -22,8 +22,9 @@ namespace Engine {
                 material.textures.emplace(texturedesc.first, LoadTexture(texturedesc.second));
             }
                 
-            material.uniforms = part.materialdesc.uniforms;
-                
+            material.params = part.materialdesc.uniforms;
+
+
             DATA::MeshData mesh;
             mesh.vertices = part.mesh.vertices;
             mesh.indices = part.mesh.indices;

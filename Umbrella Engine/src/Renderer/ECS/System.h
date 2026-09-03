@@ -140,14 +140,24 @@ public:
 
 							for (const int& i : node.meshIndices)
 							{
-								for (const auto& it : modeldata->parts[i].material.textures)
+								for (const auto& [name, textureHandle] : modeldata->parts[i].material.textures)
 								{
-									Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(it.second));
-									Engine::API::SetUniform(shaderldata->programID, Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, it.first.c_str());
+									auto uniform = shaderldata->uniforms.find(name); 
+
+									if (uniform == shaderldata->uniforms.end()) 
+										continue; 
+
+									Engine::API::Bind(Engine::AssetManager::GetInstance().GetTexture(textureHandle));
+									Engine::API::SetUniform(shaderldata->programID, Engine::AssetManager::GetInstance().
+										GetTexture(textureHandle.ID)->unit, name.c_str());
 								}
-								for (const auto& it : modeldata->parts[i].material.uniforms)
+								for (const auto& [name, textureHandle] : modeldata->parts[i].material.params)
 								{
-									Engine::API::SetUniform(shaderldata->programID, it.second, it.first.c_str());
+									auto uniform = shaderldata->uniforms.find(name);
+
+									if (uniform == shaderldata->uniforms.end())
+										continue;
+									Engine::API::SetUniform(shaderldata->programID, textureHandle, name.c_str());
 								}
 								if(render.state.shadow)
 									Engine::API::SetUniform(shaderldata->programID, 0, "shadowMap");
@@ -227,7 +237,7 @@ public:
 		onScene();
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, CameraComponent>();
-		static bool wasCameraControl = true;
+		static bool wasCameraControl = false;
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,

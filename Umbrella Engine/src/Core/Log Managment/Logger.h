@@ -3,8 +3,7 @@
 #include <string>
 #include <ctime>
 #include <sstream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
 #include <queue>
 #include <mutex>
 #include <sstream>

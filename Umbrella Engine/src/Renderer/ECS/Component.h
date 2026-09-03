@@ -59,6 +59,6 @@ public:
 };
 class ScriptComponent {
 public:
-	int id;
+	Engine::DATA::ScriptHandle id; 
 	std::string name;
 };

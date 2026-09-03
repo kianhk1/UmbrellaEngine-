@@ -205,7 +205,10 @@
     <ClInclude Include="src\Renderer\ECS\RenderQueue.h" />
     <ClInclude Include="src\Renderer\ECS\System.h" />
     <ClInclude Include="src\Renderer\Loader\AssetManager.h" />
+    <ClCompile Include="src\Renderer\Loader\DllLoader.cpp" />
+    <ClInclude Include="src\Renderer\Loader\Loader.h" />
     <ClInclude Include="src\Scene\Scene.h" />
+    <ClInclude Include="src\Script\Script.h" />
     <ClInclude Include="Umbrella Engine.h" />
   </ItemGroup>
   <ItemGroup>

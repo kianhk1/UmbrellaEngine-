@@ -32,11 +32,11 @@ bool Engine::CORE::Reader::Compile(const std::string& cppFile, const std::string
 		"\"call \""
 		"C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat"
 		"\" x64 && "
-		"cl.exe /LD \"" +
-		cppFile +
-		"\" /Fe:\"" +
-		outputDll +
-		"\"\"";
+		"cl.exe /LD /EHsc "
+		"/I\"D:\\projects\\Game Engene\\Umbrella Engine\\Umbrella Engine\\src\" "
+		"/I\"D:\\vcpkg\\vcpkg\\installed\\x64-windows\\include\" "
+		"\"" + cppFile + "\" "
+		"/Fe:\"" + outputDll + "\"\"";
 
 	std::vector<char> commandBuffer(
 		command.begin(),

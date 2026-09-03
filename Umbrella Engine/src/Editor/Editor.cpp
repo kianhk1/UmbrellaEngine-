@@ -150,12 +150,18 @@ namespace Engine {
                 if (!entities.empty())
                     entities.clear();
 
+                
+                //ScriptComponent t;
+                //t.name = "kirrr";
+                //t.id = AssetManager::GetInstance().LoadScript("Assets/Script/FileName.cpp"); 
+                //activescene->Registry().emplace<ScriptComponent>(activescene->CreateEntity("kiiir"), t); 
+
                 auto& storage = activescene->Registry().storage<entt::entity>();
                 for (auto entity : storage.each())
                 {
                     entities.push_back(std::get<0>(entity));
                 }
-                AssetManager::GetInstance().LoadScript("Assets/Script/FileName.cpp");
+                
             }
 
             void OnDetach() override
@@ -350,8 +356,7 @@ namespace Engine {
                                 Scene::SceneManager::GetInstance().GetActivescene();
 
                             auto entity = activeScene->CreateEntity(std::string(name)); 
-                            TransformComponent t;
-                            activeScene->Registry().emplace<TransformComponent>(entity, t);
+                            
                             showCreateEntity = false;
                         }
 

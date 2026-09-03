@@ -347,7 +347,7 @@ private:
 		}
 	}
 	void onScene() {
-		if (ActiveScene == Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		if (ActiveScene != Engine::Scene::SceneManager::GetInstance().GetActivescene())
 		{
 			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
 			Start();
@@ -452,7 +452,7 @@ public:
 	}
 private:
 	void onScene() {
-		if (ActiveScene == Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		if (ActiveScene != Engine::Scene::SceneManager::GetInstance().GetActivescene())
 		{
 			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
 			Start();
@@ -461,5 +461,42 @@ private:
 	Engine::DATA::ShaderHandle depthshaderID;
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene; 
 	std::shared_ptr<Engine::DATA::windowData> Window;
+};
+
+class ScriptSystem : public System {
+public:
+	ScriptSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
+	void Start() override {
+		auto& registry = ActiveScene->Registry();
+		auto view = registry.view<ScriptComponent>();
+
+		view.each(
+			[this](auto entity,
+				ScriptComponent& script) { 
+					//__debugbreak();
+					Engine::AssetManager().GetInstance().LoadDLL(script.id)->OnStart();
+			});
+	}
+	void Update(float dt) override {
+		onScene();
+		auto& registry = ActiveScene->Registry();
+		auto view = registry.view<ScriptComponent>(); 
+
+		view.each(
+			[this, &dt](auto entity, 
+				ScriptComponent& script) {
+					Warn(Engine::CORE::LogCategory::API, "ActiveScene->GetName()gdgdrgrgrsgfdgfdgfd   trgtregreg");
+					Engine::AssetManager().GetInstance().LoadDLL(script.id)->OnUpdate(dt);  
+			});
+	}
+private:
+	void onScene() {
+		if (ActiveScene != Engine::Scene::SceneManager::GetInstance().GetActivescene())
+		{
+			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
+			Start();
+		}
+	}
+	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
 };
 

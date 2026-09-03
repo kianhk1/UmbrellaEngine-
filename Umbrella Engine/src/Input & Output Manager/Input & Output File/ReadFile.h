@@ -198,15 +198,15 @@ namespace Engine {
 				{
 					DATA::TextureDesc texturedesc; 
 					texturedesc.isLinear = false; 
-					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
-					matrialdesc.texturedesc.emplace("emissiveTexture", texturedesc);
+					//texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
+					//matrialdesc.texturedesc.emplace("emissiveTexture", texturedesc);
 				}
 				else {
 					aiColor3D emissive;
 					if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive) == AI_SUCCESS)
 					{
-						matrialdesc.uniforms.emplace("emissiveColor",
-							glm::vec3(emissive.r, emissive.g, emissive.b));
+						//matrialdesc.uniforms.emplace("emissiveColor",
+						//	glm::vec3(emissive.r, emissive.g, emissive.b));
 					}
 				}
 				return matrialdesc;

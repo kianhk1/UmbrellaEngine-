@@ -1,4 +1,5 @@
 #pragma once
+#include <GLFW/glfw3.h>
 #include "../../Event Manager/EventManager.h"
 #include "../../Core/Data/Data.h"
 namespace Engine {

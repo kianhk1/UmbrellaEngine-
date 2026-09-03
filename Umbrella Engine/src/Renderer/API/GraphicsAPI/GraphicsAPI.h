@@ -1,4 +1,8 @@
 #pragma once
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+
 #include <iostream>
 #include <fstream>
 #include <glm/glm.hpp>
@@ -6,7 +10,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
 #include <vector>
-
 #include "../../../Core/Log Managment/Logger.h"
 #include "../../../Core/Data/Data.h"
 

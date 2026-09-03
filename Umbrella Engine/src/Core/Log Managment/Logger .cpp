@@ -2,7 +2,7 @@
 
 namespace Engine {
     namespace CORE {
-        void error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+        /*void error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
             std::string msg;
             switch (source) {
             case GL_DEBUG_SOURCE_API:
@@ -59,7 +59,7 @@ namespace Engine {
                 //INFO(msg);
                 break;
             }
-        }
+        }*/
 
 
         void Logger::log(LogLevel level, uint32_t& line, std::string& file, LogCategory& category, std::string message) {

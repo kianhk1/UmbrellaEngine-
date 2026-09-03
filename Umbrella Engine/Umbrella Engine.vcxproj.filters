@@ -81,7 +81,7 @@
     <ClCompile Include="src\Input &amp; Output Manager\Input &amp; Output File\ReadFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Assets\FileName.cpp">
+    <ClCompile Include="src\Renderer\Loader\DllLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -213,6 +213,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Editor\ImGui\imstb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Script\Script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer\Loader\Loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

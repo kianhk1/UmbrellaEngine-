@@ -133,7 +133,7 @@ namespace Engine {
                 std::string,
                 TextureHandle
             > textures;
-            std::unordered_multimap<std::string, Uniform> uniforms;
+            std::unordered_map<std::string, Uniform> uniforms;
             
         };
        

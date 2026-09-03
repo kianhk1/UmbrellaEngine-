@@ -68,7 +68,7 @@ namespace Engine {
 
 		void Application::Init()
 		{
-			//std::cout.rdbuf(&CORE::Logger::consolebuffer);
+			std::cout.rdbuf(&CORE::Logger::consolebuffer);
 
 			
 			// Setup GLFW window
@@ -142,8 +142,8 @@ namespace Engine {
 			std::shared_ptr <Scene::Scene> scene = Scene::SceneManager::GetInstance().GetActivescene();
 
 
-
-			RenderSystem sys(scene);
+			ScriptSystem sss(scene); 
+			RenderSystem sys(scene); 
 			CameraSystem ccc(win, scene);
 			LightSystem ll(win, scene);
 			m_Running = true;
@@ -151,7 +151,8 @@ namespace Engine {
 			ImGuiIO& io = ImGui::GetIO();
 
 			{
-				sys.Start();
+				sss.Start();
+				sys.Start(); 
 				ccc.Start();
 				ll.Start();
 			}
@@ -169,6 +170,7 @@ namespace Engine {
 
 
 				{
+					sss.Update(0.0f);
 					ll.Update(0.0f); 
 					sys.Update(0.0f); 
 					ccc.Update(0.0f);

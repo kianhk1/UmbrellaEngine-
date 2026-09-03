@@ -5,8 +5,14 @@
 #include "../../Renderer/API/GraphicsAPI/GraphicsAPI.h"
 #include "../../Core/Hash/HashMaker.h"
 #include "../../Input & Output Manager/Input & Output File/FileSystem.h"
+#include "../../Script/Script.h"
 
 namespace Engine {
+    struct LoadedDLL
+    {
+        void* module;
+        std::shared_ptr<Script> script;
+    };
     enum class TextureType
     {
         Texture2D,
@@ -17,6 +23,7 @@ namespace Engine {
     };
 	class AssetManager {
 	public:
+        AssetManager(){}
         DATA::TextureHandle LoadCubeMap(const std::vector<std::string>& paths);
         DATA::TextureHandle LoadCubeMap(const std::string paths);
         std::vector<DATA::TextureHandle> M_LoadTexture(const std::vector<DATA::TextureDesc>& path);
@@ -33,13 +40,15 @@ namespace Engine {
 
         DATA::ScriptHandle LoadScript(const std::filesystem::path& path); 
         std::string GetScript(DATA::ScriptHandle Handle);
+        std::shared_ptr<Script> LoadDLL(DATA::ScriptHandle Handle);
+        void UnloadDLL(DATA::ScriptHandle handle);
 
         static AssetManager& GetInstance() {
             static AssetManager instance;
             return instance;
         }
 	private:
-		AssetManager() = default;
+		//AssetManager() = default;
 
         std::unordered_map<
             uint64_t,
@@ -59,8 +68,12 @@ namespace Engine {
         std::unordered_map<
             uint64_t,
             std::string
-        > Scripts; 
+        > scripts; 
 
+        std::unordered_map<
+            uint64_t,
+            LoadedDLL
+        > dlls;
        static uint32_t NextTextureHandle;
     public:
         static json datat;

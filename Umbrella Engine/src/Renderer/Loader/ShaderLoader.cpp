@@ -21,7 +21,6 @@ namespace Engine {
         unsigned int fs = Engine::API::compileShader(GL_FRAGMENT_SHADER, CORE::FileSystem::ReadTextFile(fragment));
         if (Engine::API::linkShaderProgram(shader->programID, vs, fs))
         {
-            Engine::API::ReflectUniforms(shader);
             DATA::ShaderHandle Handle(hash);
             shaders.emplace(Handle.ID, shader);
             Engine::API::useShader(*shader);

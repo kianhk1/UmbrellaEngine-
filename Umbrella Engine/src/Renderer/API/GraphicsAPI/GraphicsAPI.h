@@ -67,8 +67,6 @@ namespace Engine {
         void Bind(unsigned int unit, unsigned int textureID);
 
         //
-        DATA::UniformType GetUniformType(GLenum type);
-        void ReflectUniforms(std::shared_ptr <DATA::ShaderData> shader);
         void SetUniform(
             unsigned int shaderID,
             std::variant<

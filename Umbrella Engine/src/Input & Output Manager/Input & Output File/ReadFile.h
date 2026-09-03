@@ -148,8 +148,8 @@ namespace Engine {
 			}
 			struct Materialdesc
 			{
-				std::unordered_map<std::string, DATA::Uniform> uniforms;
-				std::unordered_map<std::string, DATA::TextureDesc> texturedesc;
+				std::unordered_multimap<std::string, DATA::Uniform> uniforms;
+				std::unordered_multimap<std::string, DATA::TextureDesc> texturedesc;
 			};
 			static Materialdesc processMaterial(aiMaterial* material) {
 				aiString path;
@@ -198,15 +198,15 @@ namespace Engine {
 				{
 					DATA::TextureDesc texturedesc; 
 					texturedesc.isLinear = false; 
-					texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
-					matrialdesc.texturedesc.emplace("emissiveTexture", texturedesc);
+					//texturedesc.paths.push_back("Assets/" + std::string(path.C_Str())); 
+					//matrialdesc.texturedesc.emplace("emissiveTexture", texturedesc);
 				}
 				else {
 					aiColor3D emissive;
 					if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive) == AI_SUCCESS)
 					{
-						matrialdesc.uniforms.emplace("emissiveColor",
-							glm::vec3(emissive.r, emissive.g, emissive.b));
+						//matrialdesc.uniforms.emplace("emissiveColor",
+						//	glm::vec3(emissive.r, emissive.g, emissive.b));
 					}
 				}
 				return matrialdesc;

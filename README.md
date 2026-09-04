@@ -204,14 +204,13 @@ Every subsystem is developed from scratch to better understand the design decisi
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/UmbrellaEngine.git
+git clone https://github.com/kianhk1/UmbrellaEngine-.git
 ```
 
-Generate the project:
-
+Install the required libraries:
+You need to have Visual Studio with vcpkg and in the Umbrella Engine folder enter the following code in the terminal
 ```bash
-cmake -B build
-cmake --build build
+vcpkg install --triplet x64-windows
 ```
 
 ---

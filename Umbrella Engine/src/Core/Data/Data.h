@@ -74,10 +74,35 @@ namespace Engine {
             float FCP = 100;
         };
 
+        struct RenderState
+        {
+            bool depthtest = true;
+            bool shadow = true;
+            bool isTransparent = false;
+            int depthfunc = 0x0201;
+        };
+        using Uniform = std::variant<
+            int,
+            float,
+            glm::vec2,
+            glm::vec3,
+            glm::vec4,
+            glm::mat4
+        >;
+        enum class UniformType
+        {
+            INT,
+            FLOAT,
+            VEC2,
+            VEC3,
+            VEC4,
+            MAT4
+        };
         struct ShaderData {
             std::string path_Vertex_Shader;
             std::string path_Fragment_Shader;
             unsigned int programID = -1;
+            std::unordered_map<std::string, UniformType> uniforms;
         };
 
         struct MeshData {
@@ -104,30 +129,8 @@ namespace Engine {
             int nrChannels;
             bool isLinear = true;
         };
-        enum class UniformType
-        {
-            INT,
-            FLOAT,
-            VEC2,
-            VEC3,
-            VEC4,
-            MAT4
-        };
-        struct RenderState
-        {
-            bool depthtest = true;
-            bool shadow = true;
-            bool isTransparent = false;
-            int depthfunc = 0x0201;
-        };
-        using Uniform = std::variant<
-            int,
-            float,
-            glm::vec2,
-            glm::vec3,
-            glm::vec4,
-            glm::mat4
-        >;
+
+
         struct MaterialData {
             std::unordered_map<
                 std::string,

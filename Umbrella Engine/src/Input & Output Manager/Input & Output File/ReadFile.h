@@ -148,8 +148,8 @@ namespace Engine {
 			}
 			struct Materialdesc
 			{
-				std::unordered_multimap<std::string, DATA::Uniform> uniforms;
-				std::unordered_multimap<std::string, DATA::TextureDesc> texturedesc;
+				std::unordered_map<std::string, DATA::Uniform> uniforms;
+				std::unordered_map<std::string, DATA::TextureDesc> texturedesc;
 			};
 			static Materialdesc processMaterial(aiMaterial* material) {
 				aiString path;

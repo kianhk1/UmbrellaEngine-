@@ -153,7 +153,7 @@ namespace Engine {
             buffers.vaoID = buffers.vboID = buffers.iboID = 0;
             buffers.indexCount = 0;
         }
-        void drawMesh(DATA::MeshData& buffers, DATA::RenderState state) {
+        void drawMesh(DATA::MeshData& buffers, DATA::RenderState state) {  
             glDepthMask(state.depthtest);
             glEnable(GL_FRAMEBUFFER_SRGB);
             glDepthFunc(state.depthfunc);
@@ -345,6 +345,70 @@ namespace Engine {
         }
 
         //
+        DATA::UniformType GetUniformType(GLenum type)
+        {
+            switch (type)
+            {
+            case GL_INT:
+                return DATA::UniformType::INT;
+
+            case GL_FLOAT:
+                return DATA::UniformType::FLOAT;
+
+            case GL_FLOAT_VEC2:
+                return DATA::UniformType::VEC2;
+
+            case GL_FLOAT_VEC3:
+                return DATA::UniformType::VEC3;
+
+            case GL_FLOAT_VEC4:
+                return DATA::UniformType::VEC4;
+
+            case GL_FLOAT_MAT4:
+                return DATA::UniformType::MAT4;
+
+            case GL_SAMPLER_2D:
+                return DATA::UniformType::INT;
+
+            case GL_SAMPLER_CUBE:
+                return DATA::UniformType::INT;
+            default:
+                throw std::runtime_error("Unsupported uniform type");
+            }
+        }
+        void ReflectUniforms(std::shared_ptr<DATA::ShaderData> shader) 
+        {
+            GLint count = 0;
+
+            glGetProgramiv(
+                shader->programID,
+                GL_ACTIVE_UNIFORMS,
+                &count
+            );
+
+            for (GLint i = 0; i < count; ++i)
+            {
+                char name[256];
+                GLsizei length;
+                GLint size;
+                GLenum type;
+
+                glGetActiveUniform(
+                    shader->programID,
+                    i,
+                    sizeof(name),
+                    &length,
+                    &size,
+                    &type,
+                    name
+                );
+
+                std::string uniformName(name, length);
+
+
+                shader->uniforms.emplace(uniformName,GetUniformType(type));
+            }
+        }
         void SetUniform(
             unsigned int shaderID, 
             std::variant<

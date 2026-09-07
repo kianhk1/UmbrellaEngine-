@@ -113,13 +113,9 @@ UmbrellaEngine/
 │   ├── ECS/
 │   ├── Scene/
 │   ├── Events/
-│   └── Platform/
+│   └── Editor/
 │
-├── Sandbox/
-│
-├── Resources/
-│
-├── ThirdParty/
+├── Assets/
 │
 └── Docs/
 ```
@@ -142,10 +138,9 @@ UmbrellaEngine/
 * 🚧 PBR Material System
 * 🚧 Material Pipeline
 * 🚧 Renderer Improvements
-
+* 🚧 Shadow Mapping
 ### Planned
 
-* Shadow Mapping
 * HDR Rendering
 * Bloom
 * SSAO
@@ -166,7 +161,7 @@ UmbrellaEngine/
 * [x] Texture Loading
 * [x] Model Importing
 * [x] ECS
-* [ ] PBR
+* [x] PBR
 * [ ] Animation
 * [ ] Physics
 * [ ] Audio
@@ -178,9 +173,7 @@ UmbrellaEngine/
 # 📸 Screenshots
 
 Screenshots and videos will be added as development progresses.
-<img width="793" height="630" alt="Screenshot 2026-07-27 143816" src="https://github.com/user-attachments/assets/af9b7b1a-4a81-4f6e-ba63-ed449d60c747" />
-<img width="1056" height="1007" alt="Screenshot 2026-07-27 143839" src="https://github.com/user-attachments/assets/9bb999b5-698c-4dad-939f-ee00b40f32a1" />
-
+<img width="1582" height="896" alt="Screenshot 2026-09-03 133206" src="https://github.com/user-attachments/assets/7af98025-ed47-497b-b7a7-73c419bb227c" />
 
 # 💡 Why UmbrellaEngine?
 
@@ -197,8 +190,7 @@ Every subsystem is developed from scratch to better understand the design decisi
 ## Requirements
 
 * C++20 Compiler
-* CMake
-* OpenGL 3.3+
+* OpenGL 4.3+
 * Git
 
 Clone the repository:

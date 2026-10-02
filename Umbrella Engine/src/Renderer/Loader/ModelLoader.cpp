@@ -15,6 +15,9 @@ namespace Engine {
         auto data = CORE::Reader::ReadModel(path);
         model->path = path;
         model->root = data.root;
+        model->animations = data.animations;
+        model->boneMap = data.boneMap; 
+        model->globalInverseTransform = data.globalInverseTransform;
         for (auto& part : data.parts) {
             DATA::MaterialData material;
             for (auto& texturedesc : part.materialdesc.texturedesc)

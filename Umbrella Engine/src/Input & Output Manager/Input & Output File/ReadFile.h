@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream>
 #include "stb_image.h"
 #include "FileSystem.h"
@@ -70,81 +70,296 @@ namespace Engine {
 				data.root = std::make_shared<DATA::Node>();
 				data.root->name = scene->mRootNode->mName.C_Str();
 				data.root->localTransform = ConvertMatrix(scene->mRootNode->mTransformation);
+				data.globalInverseTransform =
+					glm::inverse(ConvertMatrix(scene->mRootNode->mTransformation));
+				for (unsigned int meshIndex = 0;meshIndex < scene->mNumMeshes;meshIndex++)
+				{
+					aiMesh* mesh = scene->mMeshes[meshIndex];
+
+					for (unsigned int boneIndex = 0;boneIndex < mesh->mNumBones;boneIndex++)
+					{
+						aiBone* bone = mesh->mBones[boneIndex];
+
+						std::string boneName = bone->mName.C_Str();
+
+						if (data.boneMap.find(boneName) != data.boneMap.end())
+							continue;
+
+						DATA::Bone newBone;
+
+						newBone.id =
+							static_cast<uint32_t>(data.boneMap.size());
+
+						newBone.name = boneName;
+
+						newBone.offsetMatrix =
+							ConvertMatrix(bone->mOffsetMatrix);
+
+						//data.boneMap[boneName] = newBone;
+						data.boneMap.emplace(boneName, newBone);
+					}
+				}
+				for (unsigned int i = 0; i < scene->mNumAnimations; i++)
+				{
+					aiAnimation* animation = scene->mAnimations[i];
+
+					DATA::AnimationData animData;
+
+					animData.name = animation->mName.C_Str();
+					animData.duration = animation->mDuration;
+					animData.ticksPerSecond = animation->mTicksPerSecond;
+
+					Info(CORE::LogCategory::Resource, "Animation:", animation->mName.C_Str());
+
+					Info(CORE::LogCategory::Resource, "Channels:", animation->mNumChannels);
+
+					for (unsigned int j = 0; j < animation->mNumChannels; j++)
+					{
+						aiNodeAnim* channel = animation->mChannels[j];
+
+						DATA::AnimationChannel channelData;
+
+						channelData.nodeName = channel->mNodeName.C_Str();
+						Info(CORE::LogCategory::Resource, "Channels Name:", channel->mNodeName.C_Str());
+						// Position
+						for (unsigned int k = 0; k < channel->mNumPositionKeys; k++)
+						{
+							aiVectorKey& key = channel->mPositionKeys[k];
+
+							DATA::PositionKey positionKey;
+
+							positionKey.time = key.mTime;
+
+							positionKey.value = glm::vec3(
+								key.mValue.x,
+								key.mValue.y,
+								key.mValue.z
+							);
+
+							channelData.positionKeys.push_back(positionKey);
+						}
+
+						// Rotation
+						for (unsigned int k = 0; k < channel->mNumRotationKeys; k++)
+						{
+							aiQuatKey& key = channel->mRotationKeys[k];
+
+							DATA::RotationKey rotationKey;
+
+							rotationKey.time = key.mTime;
+
+							rotationKey.value = glm::quat(
+								key.mValue.w,
+								key.mValue.x,
+								key.mValue.y,
+								key.mValue.z
+							);
+
+							channelData.rotationKeys.push_back(rotationKey);
+						}
+
+						// Scale
+						for (unsigned int k = 0; k < channel->mNumScalingKeys; k++)
+						{
+							aiVectorKey& key = channel->mScalingKeys[k];
+
+							DATA::ScaleKey scaleKey;
+
+							scaleKey.time = key.mTime;
+
+							scaleKey.value = glm::vec3(
+								key.mValue.x,
+								key.mValue.y,
+								key.mValue.z
+							);
+
+							channelData.scaleKeys.push_back(scaleKey);
+						}
+
+						animData.channels.push_back(channelData);
+					}
+
+					data.animations.push_back(animData);
+				}
+
 				load_model(scene->mRootNode, scene, data.root, data);
 				return data;
 			}
 
-			static bool Compile(
-				const std::string& cppFile,
-				const std::string& outputDll);
+			static bool Compile(const std::string& cppFile,const std::string& outputDll);
 
 		private:
 			
-			struct vertic { std::vector<float> vertices; std::vector<unsigned int> indices; };
-			static vertic load_mesh(aiMesh* mesh, const aiScene* scene) {
+			struct vertic { std::vector<DATA::Vertex> vertices; std::vector<unsigned int> indices; };
 
+			static vertic load_mesh(aiMesh* mesh,const aiScene* scene,Data& data)
+			{
 				vertic Mesh;
+				DATA::Vertex vertex{};
 
-				for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+				// -------------------------
+				// Vertices
+				// -------------------------
+				for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+				{
+					vertex = {};
+
 					// Position
-					Mesh.vertices.push_back(mesh->mVertices[i].x);
-					Mesh.vertices.push_back(mesh->mVertices[i].y);
-					Mesh.vertices.push_back(mesh->mVertices[i].z);
+					vertex.position = {
+						mesh->mVertices[i].x,
+						mesh->mVertices[i].y,
+						mesh->mVertices[i].z
+					};
 
 					// Color
-					if (mesh->HasVertexColors(0)) { // ÇÕáÇÍ: ˜ ˜ÑÏä ÇíäÏ˜Ó 0
-						Mesh.vertices.push_back(mesh->mColors[0][i].r);
-						Mesh.vertices.push_back(mesh->mColors[0][i].g);
-						Mesh.vertices.push_back(mesh->mColors[0][i].b);
+					if (mesh->HasVertexColors(0))
+					{
+						vertex.color = {
+							mesh->mColors[0][i].r,
+							mesh->mColors[0][i].g,
+							mesh->mColors[0][i].b
+						};
 					}
-					else {
-						Mesh.vertices.push_back(1.0f); 
-						Mesh.vertices.push_back(1.0f); 
-						Mesh.vertices.push_back(1.0f);
+					else
+					{
+						vertex.color = { 1.0f, 1.0f, 1.0f };
 					}
 
 					// UV
-					if (mesh->mTextureCoords[0]) {
-						Mesh.vertices.push_back(mesh->mTextureCoords[0][i].x);
-						Mesh.vertices.push_back(mesh->mTextureCoords[0][i].y);
+					if (mesh->mTextureCoords[0])
+					{
+						vertex.uv = {
+							mesh->mTextureCoords[0][i].x,
+							mesh->mTextureCoords[0][i].y
+						};
 					}
-					else {
-						Mesh.vertices.push_back(0.0f); 
-						Mesh.vertices.push_back(0.0f);
+					else
+					{
+						vertex.uv = { 0.0f, 0.0f };
 					}
 
 					// Normals
-					if (mesh->HasNormals()) {
-						Mesh.vertices.push_back(mesh->mNormals[i].x);
-						Mesh.vertices.push_back(mesh->mNormals[i].y);
-						Mesh.vertices.push_back(mesh->mNormals[i].z);
+					if (mesh->HasNormals())
+					{
+						vertex.normal = {
+							mesh->mNormals[i].x,
+							mesh->mNormals[i].y,
+							mesh->mNormals[i].z
+						};
 					}
-					else {
-						Mesh.vertices.push_back(0.0f); 
-						Mesh.vertices.push_back(1.0f); 
-						Mesh.vertices.push_back(0.0f);
+					else
+					{
+						vertex.normal = { 0.0f, 1.0f, 0.0f };
 					}
 
 					// Tangents
-					if (mesh->HasTangentsAndBitangents()) {
-						Mesh.vertices.push_back(mesh->mTangents[i].x);
-						Mesh.vertices.push_back(mesh->mTangents[i].y);
-						Mesh.vertices.push_back(mesh->mTangents[i].z);
+					if (mesh->HasTangentsAndBitangents())
+					{
+						vertex.tangent = {
+							mesh->mTangents[i].x,
+							mesh->mTangents[i].y,
+							mesh->mTangents[i].z
+						};
 					}
-					else {
-						Mesh.vertices.push_back(1.0f); 
-						Mesh.vertices.push_back(0.0f); Mesh.
-							vertices.push_back(0.0f);
+					else
+					{
+						vertex.tangent = { 1.0f, 0.0f, 0.0f };
+					}
+
+					Mesh.vertices.push_back(vertex);
+				}
+
+
+				// -------------------------
+				// Bones / Weights
+				// -------------------------
+				for (unsigned int boneIndex = 0;
+					boneIndex < mesh->mNumBones;
+					boneIndex++)
+				{
+					aiBone* bone = mesh->mBones[boneIndex];
+
+					std::string boneName = bone->mName.C_Str();
+
+					auto it = data.boneMap.find(boneName);
+
+					if (it == data.boneMap.end())
+						continue;
+
+					uint32_t boneID = it->second.id;
+
+					for (unsigned int weightIndex = 0;
+						weightIndex < bone->mNumWeights;
+						weightIndex++)
+					{
+						unsigned int vertexID =
+							bone->mWeights[weightIndex].mVertexId;
+
+						float weight =
+							bone->mWeights[weightIndex].mWeight;
+
+						AddBoneData(
+							Mesh.vertices[vertexID],
+							boneID,
+							weight
+						);
 					}
 				}
 
-				for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+
+				// -------------------------
+				// Indices
+				// -------------------------
+				for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+				{
 					aiFace face = mesh->mFaces[i];
-					for (unsigned int j = 0; j < face.mNumIndices; j++) {
+
+					for (unsigned int j = 0; j < face.mNumIndices; j++)
+					{
 						Mesh.indices.push_back(face.mIndices[j]);
 					}
 				}
+
 				return Mesh;
+			}
+			static void load_model(aiNode* node, const aiScene* scene, std::shared_ptr<DATA::Node> currentNode, Data& data) {
+
+				for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+					unsigned int meshIndex = node->mMeshes[i];
+					aiMesh* mesh = scene->mMeshes[meshIndex];
+					data.parts.push_back({load_mesh(mesh, scene, data),processMaterial(scene->mMaterials[mesh->mMaterialIndex])});
+					//PrintMaterial(scene->mMaterials[mesh->mMaterialIndex]);
+					currentNode->meshIndices.push_back(data.parts.size() - 1);
+				}
+
+				for (unsigned int i = 0; i < node->mNumChildren; i++) {
+					aiNode* child = node->mChildren[i];
+
+					auto ChildrenNode = std::make_shared<DATA::Node>();
+					ChildrenNode->name = child->mName.C_Str();
+					ChildrenNode->localTransform = ConvertMatrix(child->mTransformation);
+					ChildrenNode->worldTransform = currentNode->localTransform * ChildrenNode->localTransform;
+
+					currentNode->children.push_back(ChildrenNode);
+					load_model(child, scene, ChildrenNode, data);
+					//Info("load node " + child->mName.C_Str() + " successfully");
+				}
+
+				
+
+			}
+
+			static void AddBoneData(DATA::Vertex& vertex,int boneID,float weight)
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					if (vertex.boneWeights[i] == 0.0f)
+					{
+						vertex.boneIDs[i] = boneID;
+						vertex.boneWeights[i] = weight;
+						return;
+					}
+				}
 			}
 			struct Materialdesc
 			{
@@ -155,7 +370,7 @@ namespace Engine {
 				aiString path;
 				Materialdesc matrialdesc;
 				
-				// ÇÓÊÎÑÇÌ ÈÇÝÊåÇ (ÇÖÇÝå ˜ÑÏä ÔÑØ ÈÑÇí ÌáæíÑí ÇÒ ãÓíÑåÇí ÇÔÊÈÇå)
+				// Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø¨Ø§ÙØªâ€ŒÙ‡Ø§ (Ø§Ø¶Ø§ÙÙ‡ Ú©Ø±Ø¯Ù† Ø´Ø±Ø· Ø¨Ø±Ø§ÙŠ Ø¬Ù„ÙˆÚ¯ÙŠØ±ÙŠ Ø§Ø² Ù…Ø³ÙŠØ±Ù‡Ø§ÙŠ Ø§Ø´ØªØ¨Ø§Ù‡)
 				if (material->GetTexture(aiTextureType_BASE_COLOR, 0, &path) == AI_SUCCESS)
 				{
 					DATA::TextureDesc texturedesc; 
@@ -220,31 +435,12 @@ namespace Engine {
 			struct Data {
 				std::shared_ptr<DATA::Node> root;
 				std::vector<rawModelpart> parts;
+				std::vector<DATA::AnimationData> animations;
+				std::unordered_map<std::string, DATA::Bone> boneMap;
+				glm::mat4 globalInverseTransform{ 1.0f };
 			};
 
-			static void load_model(aiNode* node, const aiScene* scene, std::shared_ptr<DATA::Node> currentNode, Data& data) {
-
-				for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-					unsigned int meshIndex = node->mMeshes[i];
-					aiMesh* mesh = scene->mMeshes[meshIndex];
-					data.parts.push_back({ load_mesh(mesh, scene) ,processMaterial(scene->mMaterials[mesh->mMaterialIndex]) });
-					//PrintMaterial(scene->mMaterials[mesh->mMaterialIndex]);
-					currentNode->meshIndices.push_back(data.parts.size() - 1);
-				}
-
-				for (unsigned int i = 0; i < node->mNumChildren; i++) {
-					aiNode* child = node->mChildren[i];
-
-					auto ChildrenNode = std::make_shared<DATA::Node>();
-					ChildrenNode->name = child->mName.C_Str();
-					ChildrenNode->localTransform = ConvertMatrix(child->mTransformation); 
-					ChildrenNode->worldTransform = currentNode->localTransform * ChildrenNode->localTransform; 
-
-					currentNode->children.push_back(ChildrenNode);
-					load_model(child, scene, ChildrenNode, data);
-					//Info("load node " + child->mName.C_Str() + " successfully");
-				}
-			}
+			
 
 			static glm::mat4 ConvertMatrix(const aiMatrix4x4& m)
 			{

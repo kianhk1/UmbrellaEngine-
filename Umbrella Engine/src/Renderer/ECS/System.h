@@ -77,43 +77,45 @@ public:
 class RenderSystem : public System {
 public:
 	RenderSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
+
 	void Start() override {
 		Warn(Engine::CORE::LogCategory::API, ActiveScene->GetName());
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		colormap = Engine::API::createcolorhmap();
 		colorFBO = Engine::API::createFBO(colormap, GL_COLOR_ATTACHMENT0);
+
 		view.each(
 			[this](auto entity,
 				TransformComponent& transform,
-				MeshRendererComponent& render){
-					
+				MeshRendererComponent& render) {
+
 					// init mesh
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
-					if(modeldata) {
+					if (modeldata) {
 						for (auto& part : modeldata->parts) {
 
 							part.mesh = Engine::API::createMesh(part.mesh.vertices, part.mesh.indices);
-							Engine::API::setAttrib(part.mesh, 0, 3, 14, 0);
-							Engine::API::setAttrib(part.mesh, 1, 3, 14, 3);
-							Engine::API::setAttrib(part.mesh, 2, 2, 14, 6);
-							Engine::API::setAttrib(part.mesh, 3, 3, 14, 8);
-							Engine::API::setAttrib(part.mesh, 4, 3, 14, 11);
-							
+							Engine::API::setAttrib(part.mesh, 0, 3, 22, 0);
+							Engine::API::setAttrib(part.mesh, 1, 3, 22, 3);
+							Engine::API::setAttrib(part.mesh, 2, 2, 22, 6);
+							Engine::API::setAttrib(part.mesh, 3, 3, 22, 8);
+							Engine::API::setAttrib(part.mesh, 4, 3, 22, 11);
+							Engine::API::setAttrib(part.mesh, 5, 4, 22, 14);
+							Engine::API::setAttrib(part.mesh, 6, 4, 22, 18);
+
 							for (auto& it : part.material.textures) {
 								auto tex = Engine::AssetManager::GetInstance().GetTexture(it.second.ID);
 
 								Engine::API::SetUniform(shaderldata->programID,
 									Engine::AssetManager::GetInstance().GetTexture(it.second.ID)->unit, it.first.c_str());
-								//Warn(Engine::CORE::LogCategory::API, "sfdsfdsfdsfdf");
 							}
 						}
 						modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
 							Warn(Engine::CORE::LogCategory::API, depth ? '|' : '\0', std::string(depth, '-'), depth ? '>' : '\0', node.name);
 							});
 					}
-		 
 			});
 	}
 	void Update(float dt) override {
@@ -121,23 +123,23 @@ public:
 		auto& registry = ActiveScene->Registry();
 		auto view = registry.view<TransformComponent, MeshRendererComponent>();
 		Engine::API::clearBuffers(Engine::API::Buffers::COLOR);
-		///Engine::API::BindFBO(colorFBO);
-		view.each( 
+
+		view.each(
 			[this](auto entity,
-				TransformComponent& transform, 
-				MeshRendererComponent& render) { 
+				TransformComponent& transform,
+				MeshRendererComponent& render) {
 					auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
 					auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
-					
+
 					Engine::API::useShader(*shaderldata);
-					
-					updateTransform(transform); 
+
+					updateTransform(transform);
 					if (modeldata)
 					{
+						// ارسال ماتریس ترانسفورم کلی مدل (بدون ضرب در node.worldTransform)
+						Engine::API::SetUniform(shaderldata->programID, transform.modelMatrix, "model");
+
 						modeldata->root->each([&](Engine::DATA::Node& node, int depth) {
-							Engine::API::SetUniform(shaderldata->programID, transform.modelMatrix * node.localTransform, "model");
-
-
 							for (const int& i : node.meshIndices)
 							{
 								for (const auto& [name, textureHandle] : modeldata->parts[i].material.textures)
@@ -151,10 +153,7 @@ public:
 									Engine::API::SetUniform(shaderldata->programID, Engine::AssetManager::GetInstance().
 										GetTexture(textureHandle.ID)->unit, name.c_str());
 								}
-								for (const auto& it : modeldata->parts[i].material.uniforms)
-								{
-									Engine::API::SetUniform(shaderldata->programID, it.second, it.first.c_str());
-								}
+
 								for (const auto& [name, value] : modeldata->parts[i].material.uniforms)
 								{
 									auto uniform = shaderldata->uniforms.find(name);
@@ -164,18 +163,16 @@ public:
 
 									Engine::API::SetUniform(shaderldata->programID, value, name.c_str());
 								}
-								if(render.state.shadow)
+								if (render.state.shadow)
 									Engine::API::SetUniform(shaderldata->programID, 0, "shadowMap");
+
 								Engine::API::drawMesh(modeldata->parts[i].mesh, render.state);
 							}
 							});
 					}
-					
-					
 			});
-		///Engine::API::BindFBO(0);
-		///Engine::API::Bind(1, colormap);
 	}
+
 private:
 	void updateTransform(TransformComponent& transform) {
 		glm::mat4 localMatrix =
@@ -184,17 +181,11 @@ private:
 			glm::rotate(glm::mat4(1.0f), transform.rotation.y, glm::vec3(0, 1, 0)) * // Yaw
 			glm::rotate(glm::mat4(1.0f), transform.rotation.z, glm::vec3(0, 0, 1)) * // Roll
 			glm::scale(glm::mat4(1.0f), transform.scale);
+
 		if (transform.parent) transform.modelMatrix = transform.parent->modelMatrix * localMatrix;
 		else transform.modelMatrix = localMatrix;
 
-		//forward = glm::vec3(modelMatrix[2]); // محور Z جهانی شده
-		//up = glm::vec3(modelMatrix[1]); // محور Y جهانی شده
-		//right = glm::vec3(modelMatrix[0]);
 		transform.right = glm::normalize(glm::cross(transform.forward, transform.up));
-		/*Logger::WARN("x:" + to_string(right.x) + "\n");
-		Logger::WARN("y:" + to_string(right.y) + "\n");
-		Logger::WARN("z:" + to_string(right.z) + "\n");*/
-
 	}
 	void onScene() {
 		if (ActiveScene != Engine::Scene::SceneManager::GetInstance().GetActivescene())
@@ -202,9 +193,159 @@ private:
 			ActiveScene = Engine::Scene::SceneManager::GetInstance().GetActivescene();
 			Start();
 		}
-	}
+	};
+
 	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
 	unsigned int colormap, colorFBO;
+};
+
+class AnimationSystem : public System {
+public:
+	AnimationSystem(std::shared_ptr<Engine::Scene::Scene> scene) : ActiveScene(scene) {}
+	void Start() override {}
+	void Update(float dt) override {
+		auto& registry = ActiveScene->Registry();
+		auto view = registry.view<TransformComponent, MeshRendererComponent, AnimationComponent>();
+
+		view.each([&](auto entity,
+			TransformComponent& transform,
+			MeshRendererComponent& render,
+			AnimationComponent& anim) {
+				auto modeldata = Engine::AssetManager::GetInstance().GetModel(render.modelhandle);
+				auto shaderldata = Engine::AssetManager::GetInstance().GetShader(render.shader);
+
+				if (!modeldata || modeldata->animations.empty())
+					return;
+
+				std::vector<glm::mat4> boneMatrices(modeldata->boneMap.size(), glm::mat4(1.0f));
+
+				Engine::DATA::AnimationData& animation = modeldata->animations[0];
+				double animationTime = UpdateAnimation(animation, anim, dt);
+
+				// به‌روزرسانی بازگشتی پوزها، worldTransform و finalTransform برای تمام گره‌ها
+				UpdateNodeHierarchy(modeldata->root, animation, animationTime, glm::mat4(1.0f), modeldata);
+
+				for (const auto& [name, bone] : modeldata->boneMap)
+				{
+					if (bone.id < boneMatrices.size()) {
+						boneMatrices[bone.id] = bone.finalTransform;
+					}
+				}
+
+				Engine::API::SetUniform(shaderldata->programID, boneMatrices, "boneMatrices[0]");
+			});
+	}
+
+private:
+	std::shared_ptr<Engine::Scene::Scene> ActiveScene;
+
+	double UpdateAnimation(Engine::DATA::AnimationData& animation, AnimationComponent& anim, float dt)
+	{
+		if (!anim.playing) return anim.currentTime * animation.ticksPerSecond;
+
+		anim.currentTime += dt * anim.speed;
+		double ticksPerSecond = animation.ticksPerSecond;
+		if (ticksPerSecond <= 0.0) ticksPerSecond = 25.0;
+		double animationTime = anim.currentTime * ticksPerSecond;
+
+		if (anim.looping) {
+			animationTime = fmod(animationTime, animation.duration);
+		}
+		else {
+			animationTime = std::min(animationTime, animation.duration);
+		}
+		return animationTime;
+	}
+
+	Engine::DATA::AnimationChannel* FindChannel(Engine::DATA::AnimationData& animation, const std::string& nodeName) {
+		for (auto& channel : animation.channels) {
+			if (channel.nodeName == nodeName) return &channel;
+		}
+		return nullptr;
+	}
+
+	void UpdateNodeHierarchy(std::shared_ptr<Engine::DATA::Node> node,
+		Engine::DATA::AnimationData& animation,double animationTime,
+		const glm::mat4& parentWorldTransform,
+		std::shared_ptr<Engine::DATA::ModelData> modeldata)
+	{
+		std::string nodeName = node->name;
+		glm::mat4 nodeTransform = node->localTransform;
+
+		Engine::DATA::AnimationChannel* channel = FindChannel(animation, nodeName);
+
+		if (channel) {
+			glm::vec3 position = InterpolatePosition(*channel, animationTime);
+			glm::quat rotation = InterpolateRotation(*channel, animationTime);
+			glm::vec3 scale = InterpolateScale(*channel, animationTime);
+
+			nodeTransform = 
+				glm::translate(glm::mat4(1.0f), position) *
+				glm::mat4_cast(rotation) *
+				glm::scale(glm::mat4(1.0f), scale);
+
+			node->localTransform = nodeTransform;
+		}
+
+		// محاسبه دقیق worldTransform برای گره جاری
+		node->worldTransform = parentWorldTransform * nodeTransform;
+
+		// محاسبه نهایی ماتریس استخوان در صورت وجود
+		auto it = modeldata->boneMap.find(nodeName);
+		if (it != modeldata->boneMap.end())
+		{
+			Engine::DATA::Bone& bone = it->second;
+			bone.finalTransform = 
+				modeldata->globalInverseTransform *
+				node->worldTransform *
+				bone.offsetMatrix;
+		}
+
+		// اعمال بازگشتی برای فرزندان
+		for (auto& child : node->children) {
+			UpdateNodeHierarchy(child, animation, animationTime, node->worldTransform, modeldata);
+		}
+	}
+
+	template<typename T>
+	int FindKeyIndex(const std::vector<T>& keys, double animationTime) {
+		if (keys.size() <= 1) return 0;
+		for (int i = 0; i < static_cast<int>(keys.size()) - 1; i++) {
+			if (animationTime < keys[i + 1].time) return i;
+		}
+		return static_cast<int>(keys.size()) - 2;
+	}
+
+	glm::vec3 InterpolatePosition(const Engine::DATA::AnimationChannel& channel, double animationTime) {
+		if (channel.positionKeys.empty()) return glm::vec3(0.0f);
+		if (channel.positionKeys.size() == 1) return channel.positionKeys[0].value;
+		int index = FindKeyIndex(channel.positionKeys, animationTime);
+		const auto& key0 = channel.positionKeys[index];
+		const auto& key1 = channel.positionKeys[index + 1];
+		float factor = static_cast<float>((animationTime - key0.time) / (key1.time - key0.time));
+		factor = glm::clamp(factor, 0.0f, 1.0f);
+		return glm::mix(key0.value, key1.value, factor);
+	}
+	glm::vec3 InterpolateScale(const Engine::DATA::AnimationChannel& channel, double animationTime) {
+		if (channel.scaleKeys.empty()) return glm::vec3(1.0f);
+		if (channel.scaleKeys.size() == 1) return channel.scaleKeys[0].value;
+		int index = FindKeyIndex(channel.scaleKeys, animationTime);
+		const auto& key0 = channel.scaleKeys[index];
+		const auto& key1 = channel.scaleKeys[index + 1];
+		float factor = static_cast<float>((animationTime - key0.time) / (key1.time - key0.time));
+		factor = glm::clamp(factor, 0.0f, 1.0f);
+		return glm::mix(key0.value, key1.value, factor);
+	}
+	glm::quat InterpolateRotation(const Engine::DATA::AnimationChannel& channel, double animationTime) {
+		if (channel.rotationKeys.empty()) return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		if (channel.rotationKeys.size() == 1) return channel.rotationKeys[0].value;
+		int index = FindKeyIndex(channel.rotationKeys, animationTime);
+		const auto& key0 = channel.rotationKeys[index];
+		const auto& key1 = channel.rotationKeys[index + 1];
+		float factor = static_cast<float>((animationTime - key0.time) / (key1.time - key0.time));
+		factor = glm::clamp(factor, 0.0f, 1.0f);
+		return glm::slerp(key0.value, key1.value, factor);
+	}
 };
 
 class CameraSystem : public System {
@@ -339,7 +480,7 @@ private:
 	}
 	void Move(TransformComponent& transform, float dt) {
 
-		float velocity = 0.5 * dt;
+		float velocity = 1.0f * dt;
 		if (Engine::API::Input::IsKeyPressed(Window,Engine::API::KeyboardKey::KEY_W)) {
 			transform.position += transform.forward * velocity;// جلو
 		}
@@ -416,13 +557,13 @@ public:
 							CameraComponent& cam) {
 								//glm::vec3 displaycenter(cam.cameradata.windowWidth / 2, cam.cameradata.windowHeight / 2); 
 								//if (cam.ismoving) todo : cam active 
-								center.x += transform.position.x/10;
-								center.z += transform.position.z/10;
+								center.x += transform.position.x/5;
+								center.z += transform.position.z/5;
 						});
 
 					glm::vec3 lightPos = transform.position;
-					if (light.type == 0)
-						glm::vec3 lightPos = center - transform.position * 20.0f;
+					//if (light.type == 0)
+						 //lightPos = center - transform.position * 20.0f;
 					//Warn(Engine::CORE::LogCategory::API, lightPos.x, lightPos.y, lightPos.z); 
 					glm::mat4 lightView = glm::lookAt(lightPos, center, transform.up);
 					glm::mat4 lightProjection;

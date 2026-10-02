@@ -5,6 +5,8 @@ layout (location = 1) in vec3 aColor;
 layout (location = 2) in vec2 aTexCoord;
 layout (location = 3) in vec3 aNormal;
 layout (location = 4) in vec3 aTangent;
+layout (location = 5) in vec4 boneIDs;
+layout (location = 6) in vec4 boneWeights;
 layout (binding = 0) uniform Camradata {
     mat4 projection;
     mat4 view;
@@ -17,6 +19,7 @@ layout (binding = 1) uniform Light {
     int type;
 };
 uniform mat4 model;
+uniform mat4 boneMatrices[100];
 
 out vec3 ourColor;
 out vec2 TexCoord;
@@ -48,5 +51,13 @@ void main()
     ourColor = aColor;
     Normal = aNormal;
     TexCoord = aTexCoord;
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+	mat4 skinMatrix =
+      boneWeights.x * boneMatrices[int(boneIDs.x)]
+    + boneWeights.y * boneMatrices[int(boneIDs.y)]
+    + boneWeights.z * boneMatrices[int(boneIDs.z)]
+    + boneWeights.w * boneMatrices[int(boneIDs.w)];
+
+    vec4 skinnedPosition = skinMatrix * vec4(aPos, 1.0);
+
+    gl_Position = projection * view * model * skinnedPosition;
 }

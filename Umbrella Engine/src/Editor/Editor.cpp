@@ -258,6 +258,19 @@ namespace Engine {
                         );
                     }
                 }
+                if (activescene->Registry().all_of<AnimationComponent>(activeentity))
+                {
+                    auto& animation = activescene->Registry().get<AnimationComponent>(activeentity);
+
+                    if (ImGui::CollapsingHeader("AnimationComponent"))
+                    {
+                        ImGui::Checkbox("playing",&animation.playing);
+                        ImGui::Checkbox("looping", &animation.looping);
+                        ImGui::Text("speed:");
+                        ImGui::SameLine();
+                        ImGui::DragFloat("##speed:",&animation.speed,0.1f);
+                    }
+                }
                 ImGui::End();
             }
         private:

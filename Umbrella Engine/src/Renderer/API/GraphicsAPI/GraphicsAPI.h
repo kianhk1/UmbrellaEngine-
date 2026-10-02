@@ -42,7 +42,7 @@ namespace Engine {
 
         // مدیریت مش‌ها (Vertex/Index data)
         void setAttrib(DATA::MeshData& data, int a, int b, int c, int d);
-        DATA::MeshData createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices);
+        DATA::MeshData createMesh(std::vector<DATA::Vertex>& vertices, std::vector<unsigned int>& indices);
         void deleteMesh(DATA::MeshData& buffers);
         void drawMesh(DATA::MeshData& buffers, DATA::RenderState state);
 
@@ -76,7 +76,8 @@ namespace Engine {
             glm::vec2,
             glm::vec3,
             glm::vec4,
-            glm::mat4
+            glm::mat4,
+            std::vector<glm::mat4>
             > value,
             const GLchar* name);
     }

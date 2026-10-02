@@ -13,7 +13,7 @@ out vec3 TexCoord;
 
 void main()
 {
-    model;
+        mat4(mat3(model));
     gl_Position = (projection * mat4(mat3(view)) * vec4(aPos,1.0)).xyww;
     TexCoord = aPos;
 }

@@ -65,10 +65,13 @@ namespace Engine {
 		Application& Application::Get(){
 			return *s_Instance;
 		}
-
+		std::ofstream logfile("log.txt"); 
 		void Application::Init()
 		{
 			std::cout.rdbuf(&CORE::Logger::consolebuffer);
+			
+			//std::cout.rdbuf(logfile.rdbuf());
+			//logfile.flush();
 
 			
 			// Setup GLFW window
@@ -146,6 +149,8 @@ namespace Engine {
 			RenderSystem sys(scene); 
 			CameraSystem ccc(win, scene);
 			LightSystem ll(win, scene);
+			AnimationSystem an(scene);
+
 			m_Running = true;
 
 			ImGuiIO& io = ImGui::GetIO();
@@ -155,6 +160,7 @@ namespace Engine {
 				sys.Start(); 
 				ccc.Start();
 				ll.Start();
+				an.Start();
 			}
 			// Main loop
 			while (!Engine::API::IsWindowShouldClose(win) && m_Running) 
@@ -170,10 +176,12 @@ namespace Engine {
 
 
 				{
+					an.Update(1.0f); 
 					sss.Update(0.0f);
 					ll.Update(0.0f); 
 					sys.Update(0.0f); 
 					ccc.Update(0.0f);
+					
 				}
 
 				if (Engine::API::Input::IsButtonPressed(win, Engine::API::MouseButton::MOUSE_BUTTON_MIDDLE)) {

@@ -87,7 +87,8 @@ namespace Engine {
             glm::vec2,
             glm::vec3,
             glm::vec4,
-            glm::mat4
+            glm::mat4,
+            std::vector<glm::mat4>
         >;
         enum class UniformType
         {
@@ -105,13 +106,24 @@ namespace Engine {
             std::unordered_map<std::string, UniformType> uniforms;
         };
 
+        struct Vertex
+        { 
+            std::array<float, 3> position;
+            std::array<float, 3> color;
+            std::array<float, 2> uv;
+            std::array<float, 3>normal;
+            std::array<float, 3> tangent;
+
+            std::array<float, 4> boneIDs{};
+            std::array<float, 4> boneWeights{};
+        };
         struct MeshData {
             MeshData() = default;
             unsigned int vaoID = 0; 
             unsigned int vboID = 0;
             unsigned int iboID = 0;
             int indexCount = 0;
-            std::vector<float> vertices;
+            std::vector<Vertex> vertices;
             std::vector<unsigned int> indices;
         };
 
@@ -139,13 +151,55 @@ namespace Engine {
             std::unordered_map<std::string, Uniform> uniforms;
             
         };
-       
+
+
+        struct PositionKey
+        {
+            double time;
+            glm::vec3 value;
+        };
+        struct RotationKey
+        {
+            double time;
+            glm::quat value;
+        };
+        struct ScaleKey
+        {
+            double time;
+            glm::vec3 value;
+        };
+
+        struct AnimationChannel
+        {
+            std::string nodeName;
+
+            std::vector<PositionKey> positionKeys;
+            std::vector<RotationKey> rotationKeys;
+            std::vector<ScaleKey> scaleKeys;
+        };
+        struct AnimationData
+        {
+            std::string name;
+            double duration;
+            double ticksPerSecond;
+            
+            std::vector<AnimationChannel> channels;
+        };
+
+        struct Bone
+        {
+            uint32_t id;
+            std::string name;
+            glm::mat4 offsetMatrix;
+            glm::mat4 finalTransform;
+        };
+
         struct Node
         {
             int cc = 0;
             std::vector<std::shared_ptr<Node>> children;
             std::string name;
-            glm::mat4 localTransform;
+            glm::mat4 localTransform; 
             glm::mat4 worldTransform;
             std::vector<uint32_t> meshIndices;
 
@@ -171,6 +225,10 @@ namespace Engine {
             std::string path;
             std::shared_ptr<DATA::Node> root;
             std::vector<ModelPart> parts; 
+            std::vector<DATA::AnimationData> animations; 
+            std::unordered_map<std::string, Bone> boneMap;
+
+            glm::mat4 globalInverseTransform{ 1.0f };
             ModelPart& GetMaterial(uint32_t index)
             {
                 return parts[index];

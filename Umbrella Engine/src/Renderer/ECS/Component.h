@@ -62,3 +62,14 @@ public:
 	Engine::DATA::ScriptHandle id; 
 	std::string name;
 };
+class AnimationComponent {
+public:
+	uint32_t animationIndex = 0;
+
+	float currentTime = 0.0f;
+
+	float speed = 1.0f;
+
+	bool playing = true;
+	bool looping = true;
+};

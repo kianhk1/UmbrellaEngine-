@@ -120,11 +120,11 @@ namespace Engine {
             glBindBuffer(GL_ARRAY_BUFFER, data.vboID);
             glEnableVertexAttribArray(data.iboID);
         }
-        void createVBO(DATA::MeshData& data, float* vertex, int a) {
+        void createVBO(DATA::MeshData& data, DATA::Vertex* vertex, int a) {
             glBindVertexArray(data.vaoID);
             glGenBuffers(1, &data.vboID);
             glBindBuffer(GL_ARRAY_BUFFER, data.vboID);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a, vertex, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(DATA::Vertex) * a, vertex, GL_STATIC_DRAW);
         }
         void createIBO(DATA::MeshData& data, unsigned int* indexes, int a) {
             glBindVertexArray(data.vaoID);
@@ -138,7 +138,7 @@ namespace Engine {
             glBindBuffer(GL_ARRAY_BUFFER, data.vboID);
             glVertexAttribPointer(a, b, GL_FLOAT, GL_FALSE, c * sizeof(float), (void*)(d * sizeof(float)));
         }
-        DATA::MeshData createMesh(std::vector<float>& vertices, std::vector<unsigned int>& indices) {
+        DATA::MeshData createMesh(std::vector<DATA::Vertex>& vertices, std::vector<unsigned int>& indices) {
             DATA::MeshData buffers;
             createVAO(buffers);
             createVBO(buffers, vertices.data(), vertices.size());
@@ -417,7 +417,8 @@ namespace Engine {
             glm::vec2,
             glm::vec3, 
             glm::vec4,
-            glm::mat4
+            glm::mat4,
+            std::vector<glm::mat4>
             > value, 
             const GLchar* name) {
             int loc = glGetUniformLocation(shaderID, name);
@@ -452,6 +453,10 @@ namespace Engine {
                     else if constexpr (std::is_same_v<T, glm::mat4>)
                     {
                         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(value));
+                    }
+                    else if constexpr (std::is_same_v<T, std::vector<glm::mat4>>)
+                    {
+                        glUniformMatrix4fv(loc, static_cast<GLsizei>(value.size()), GL_FALSE, glm::value_ptr(value[0]));
                     }
                     else {
                         Warn(Engine::CORE::LogCategory::API, "Uniform type not soported in shader program.");

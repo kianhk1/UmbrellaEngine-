@@ -144,6 +144,13 @@ namespace Engine {
                                     l.type = component["lighttype"];
                                     registry.emplace<LightComponent>(entity, l);
                                 }
+                                if (name == "animation") {
+                                    AnimationComponent a;
+
+                                    a.speed = component["speed"];
+
+                                    registry.emplace<AnimationComponent>(entity, a);
+                                }
                             }
                         }
                     }
@@ -213,7 +220,7 @@ namespace Engine {
                                 data["entities"][registry.GetName(entity)]["component"]["MeshRenderer"]["Texture"]
                                     .push_back(textureDatabase["Texture"]["2D"][id]);
                             }
-                        }
+                        } 
                     }
                     });
 
@@ -234,6 +241,13 @@ namespace Engine {
                         data["entities"][registry.GetName(entity)]["component"]["Light"] = {
                             {"lightcolor", {Light.light.lightcolor.x,Light.light.lightcolor.y,Light.light.lightcolor.z}},
                             {"lighttype", Light.type} };
+                    });
+
+                auto animationview = registry.view<AnimationComponent>();
+                animationview.each([&](auto entity,
+                    AnimationComponent& anim) {
+                        data["entities"][registry.GetName(entity)]["component"]["animation"] = {
+                            {"speed", anim.speed}};
                     });
 
                 std::ofstream file("Assets/Scene/" + scene->GetName() + ".json");

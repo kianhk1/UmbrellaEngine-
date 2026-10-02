@@ -140,7 +140,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="NewFolder1\FileName.cpp" />
     <ClCompile Include="src\Core\Log Managment\Logger .cpp" />
     <ClCompile Include="src\Editor\Application.cpp" />
     <ClInclude Include="src\Editor\ImGui\imconfig.h" />
